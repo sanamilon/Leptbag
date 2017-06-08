@@ -75,7 +75,7 @@ void commonshapeObject::destroy(int id){
 
 void commonshapeObject::render(){
 
-	glm::mat4 instanceMatrixArray[objects.size()];
+	glm::mat4 *instanceMatrixArray = new glm::mat4[objects.size()];
 
 	for(int i = 0; i < objects.size(); i++){
 		instanceMatrixArray[i] = objects[i]->loadMatrix();
@@ -98,6 +98,8 @@ void commonshapeObject::render(){
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
 
 	glDrawElementsInstanced(GL_TRIANGLES, objectData.size(), GL_UNSIGNED_INT, (void*)0, objects.size());
+
+	delete []instanceMatrixArray;
 
 }
 
