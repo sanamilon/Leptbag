@@ -376,6 +376,30 @@ int main(){
 
 
 
+	cubeshapeObject* cubeA = cubeshape::create(vec3(5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
+	cubeshapeObject* cubeB = cubeshape::create(vec3(-5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
+
+	btTransform frameInA, frameInB;
+	frameInA = btTransform::getIdentity();
+	frameInA.setOrigin(btVector3(btScalar(0.), btScalar(0.), btScalar(0.)));
+	frameInB = btTransform::getIdentity();
+	frameInB.setOrigin(btVector3(btScalar(0.), btScalar(0.), btScalar(0.)));
+
+
+	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false );
+	dynamicsWorld->addConstraint(pGen6Dof);
+	
+	pGen6Dof->setAngularLowerLimit(btVector3(0,0,0));
+	pGen6Dof->setAngularUpperLimit(btVector3(0,0,0));
+	pGen6Dof->setLinearLowerLimit(btVector3(-100, -100, -100));
+	pGen6Dof->setLinearUpperLimit(btVector3(100, 100, 100));
+	
+	pGen6Dof->getTranslationalLimitMotor()->m_enableMotor[0] = true;
+	pGen6Dof->getTranslationalLimitMotor()->m_targetVelocity[0] = 5.0f;
+	pGen6Dof->getTranslationalLimitMotor()->m_maxMotorForce[0] = 10.0f;
+
+
+
 
 
 	glEnableVertexAttribArray(0);
