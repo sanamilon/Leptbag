@@ -57,7 +57,7 @@ std::vector<pluginfunc_t> pluginTickVector;
 
 
 //カメラの位置など
-glm::vec3 position = glm::vec3( 0, 0, 0 ); 
+glm::vec3 position = glm::vec3( 0, 0, 0 );
 double horizontalAngle = 3.14f;
 double verticalAngle = 0.0f;
 
@@ -97,7 +97,7 @@ void computeMatricesFromInputs(){
 
 	//カメラの向きを計算する
 	glm::vec3 direction(
-			cos(verticalAngle) * sin(horizontalAngle), 
+			cos(verticalAngle) * sin(horizontalAngle),
 			sin(verticalAngle),
 			cos(verticalAngle) * cos(horizontalAngle)
 			);
@@ -374,32 +374,27 @@ int main(){
 		(elem)();
 	}
 
-
-
 	cubeshapeObject* cubeA = cubeshape::create(vec3(5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
 	cubeshapeObject* cubeB = cubeshape::create(vec3(-5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
 
 	btTransform frameInA, frameInB;
-	frameInA = btTransform::getIdentity();
+	frameInA = cubeA->body->getCenterOfMassTransform();
 	frameInA.setOrigin(btVector3(btScalar(0.), btScalar(0.), btScalar(0.)));
-	frameInB = btTransform::getIdentity();
+	frameInB = cubeB->body->getCenterOfMassTransform();
 	frameInB.setOrigin(btVector3(btScalar(0.), btScalar(0.), btScalar(0.)));
 
 
 	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false );
 	dynamicsWorld->addConstraint(pGen6Dof);
-	
+
 	pGen6Dof->setAngularLowerLimit(btVector3(0,0,0));
 	pGen6Dof->setAngularUpperLimit(btVector3(0,0,0));
 	pGen6Dof->setLinearLowerLimit(btVector3(-100, -100, -100));
 	pGen6Dof->setLinearUpperLimit(btVector3(100, 100, 100));
-	
-	pGen6Dof->getTranslationalLimitMotor()->m_enableMotor[0] = true;
-	pGen6Dof->getTranslationalLimitMotor()->m_targetVelocity[0] = 5.0f;
-	pGen6Dof->getTranslationalLimitMotor()->m_maxMotorForce[0] = 10.0f;
 
-
-
+	//pGen6Dof->getTranslationalLimitMotor()->m_enableMotor[0] = true;
+	//pGen6Dof->getTranslationalLimitMotor()->m_targetVelocity[0] = 5.0f;
+	//pGen6Dof->getTranslationalLimitMotor()->m_maxMotorForce[0] = 10.0f;
 
 
 	glEnableVertexAttribArray(0);
