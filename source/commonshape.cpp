@@ -37,18 +37,19 @@ shapePointerObject* commonshapeObject::create(vec3 &position, vec3 &size, quat &
 	return new shapePointerObject(this, false, NULL, position, size, rotate);
 }
 
-
 shapePointerObject* commonshapeObject::create(vec3 &position, vec3 &size, quat &rotate, float mass){
 
 		std::vector<btVector3> convexHullShapePoints;
 
 		for(auto elem: objectData){
-			btVector3 co = position.toBullet();
+			btVector3 co = btVector3(elem.positionX, elem.positionY, elem.positionZ);
 			auto itr = std::find(convexHullShapePoints.begin(), convexHullShapePoints.end(), co);
 			if( itr == convexHullShapePoints.end() ){
 				glm::vec4 target = glm::scale(glm::mat4(1.0f), size.toGlm()) * glm::vec4(co.x(), co.y(), co.z(), 1);
+
 				convexHullShapePoints.push_back(
-							btVector3(target.x, target.y, target.z)
+						//NOTE: bulletは物体に0.04のマージンを加えるので、その分だけ小さいオブジェクトを作成する。
+							btVector3(target.x - (0.04*(-1*((signbit(target.x)*2)-1))), target.y - (0.04*(-1*((signbit(target.y)*2)-1))), target.z - (0.04*(-1*((signbit(target.z)*2)-1))))
 						);
 			}
 		}
