@@ -278,11 +278,11 @@ class dog{
 	btHingeConstraint* hinge_head_muzzle;
 	btHingeConstraint* hinge_earLeft_head;
 	btHingeConstraint* hinge_earRight_head;
-	btHingeConstraint* hinge_body_legFrontLeft;
-	btHingeConstraint* hinge_body_legFrontRight;
-	btHingeConstraint* hinge_body_legBackLeft;
-	btHingeConstraint* hinge_body_legBackRight;
 	btHingeConstraint* hinge_body_tail;
+	btGeneric6DofConstraint* hinge_body_legFrontLeft;
+	btGeneric6DofConstraint* hinge_body_legFrontRight;
+	btGeneric6DofConstraint* hinge_body_legBackLeft;
+	btGeneric6DofConstraint* hinge_body_legBackRight;
 
 
 	dog(btDiscreteDynamicsWorld* dynamicsWorld, float x, float y, float z, bool initialDNA){
@@ -340,44 +340,27 @@ class dog{
 		dynamicsWorld->addConstraint(hinge_earRight_head, true);
 
 
-		hinge_body_legFrontLeft = new btHingeConstraint(*(body->body), *(legFrontLeft->body), btVector3(0.5, -0.5, -0.4), btVector3(0, 0.5, 0.0), btVector3(0, 0, 1), btVector3(0, 0, 1));
-		hinge_body_legFrontLeft->setLimit(-3.14/2, 3.14/2);
-		dynamicsWorld->addConstraint(hinge_body_legFrontLeft, true);
+		hinge_body_legFrontLeft  = make6dof(body, legFrontLeft,  btVector3(0.5,  -0.5, -0.4), btVector3(0, 0.5, 0.0));
+		dynamicsWorld->addConstraint(hinge_body_legFrontLeft);
 
-		hinge_body_legFrontRight = new btHingeConstraint(*(body->body), *(legFrontRight->body), btVector3(0.5, -0.5, 0.4), btVector3(0, 0.5, 0.0), btVector3(0, 0, 1), btVector3(0, 0, 1));
-		hinge_body_legFrontRight->setLimit(-3.14/2, 3.14/2);
-		dynamicsWorld->addConstraint(hinge_body_legFrontRight, true);
+		hinge_body_legFrontRight = make6dof(body, legFrontRight, btVector3(0.5,  -0.5,  0.4), btVector3(0, 0.5, 0.0));
+		dynamicsWorld->addConstraint(hinge_body_legFrontRight);
 
-		hinge_body_legBackLeft = new btHingeConstraint(*(body->body), *(legBackLeft->body), btVector3(-0.5, -0.5, -0.4), btVector3(0, 0.5, 0.0), btVector3(0, 0, 1), btVector3(0, 0, 1));
-		hinge_body_legBackLeft->setLimit(-3.14/2, 3.14/2);
-		dynamicsWorld->addConstraint(hinge_body_legBackLeft, true);
+		hinge_body_legBackLeft   = make6dof(body, legBackLeft,   btVector3(-0.5, -0.5, -0.4), btVector3(0, 0.5, 0.0));
+		dynamicsWorld->addConstraint(hinge_body_legBackLeft);
 
-		hinge_body_legBackRight = new btHingeConstraint(*(body->body), *(legBackRight->body), btVector3(-0.5, -0.5, 0.4), btVector3(0, 0.5, 0.0), btVector3(0, 0, 1), btVector3(0, 0, 1));
-		hinge_body_legBackRight->setLimit(-3.14/2, 3.14/2);
-		dynamicsWorld->addConstraint(hinge_body_legBackRight, true);
+		hinge_body_legBackRight  = make6dof(body, legBackRight,  btVector3(-0.5, -0.5,  0.4), btVector3(0, 0.5, 0.0));
+		dynamicsWorld->addConstraint(hinge_body_legBackRight);
 
 		hinge_body_tail = new btHingeConstraint(*(body->body), *(tail->body), btVector3(-1, 0.4, 0), btVector3(0.5, 0, 0.0), btVector3(0, 0, 1), btVector3(0, 0, 1));
 		hinge_body_tail->setLimit(-3.14/3, 3.14/3);
 		dynamicsWorld->addConstraint(hinge_body_tail, true);
-
-		//足の関節にモーターをつけている
-		hinge_body_legFrontLeft->enableMotor(true);
-		hinge_body_legFrontLeft->setMaxMotorImpulse(2);
-		hinge_body_legFrontRight->enableMotor(true);
-		hinge_body_legFrontRight->setMaxMotorImpulse(2);
-		hinge_body_legBackLeft->enableMotor(true);
-		hinge_body_legBackLeft->setMaxMotorImpulse(2);
-		hinge_body_legBackRight->enableMotor(true);
-		hinge_body_legBackRight->setMaxMotorImpulse(2);
 	}
 
 
 	//シーケンス番号に対応するDNAに記録されている角度まで足を動かす
 	void move(int sequence){
-		hinge_body_legFrontLeft->setMotorTarget(dna[sequence][0], 0.3);
-		hinge_body_legFrontRight->setMotorTarget(dna[sequence][1], 0.3);
-		hinge_body_legBackLeft->setMotorTarget(dna[sequence][2], 0.3);
-		hinge_body_legBackRight->setMotorTarget(dna[sequence][3], 0.3);
+
 	}
 
 	void destroy(){
@@ -402,6 +385,24 @@ class dog{
 		legBackLeft->destroy();
 		legBackRight->destroy();
 		tail->destroy();
+	}
+
+	btGeneric6DofConstraint* make6dof(cubeshapeObject* cubeA, cubeshapeObject* cubeB, btVector3 pivotInA, btVector3 pivotInB){
+		btTransform frameInA, frameInB;
+		frameInA = cubeA->body->getCenterOfMassTransform();
+		frameInB = cubeB->body->getCenterOfMassTransform();
+		frameInA.setOrigin(pivotInA);
+		frameInB.setOrigin(pivotInB);
+
+		btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false );
+
+		pGen6Dof->setAngularLowerLimit(btVector3(0,0,-M_PI));
+		pGen6Dof->setAngularUpperLimit(btVector3(0,0,M_PI));
+		pGen6Dof->setLinearLowerLimit(btVector3(0,0,0));
+		pGen6Dof->setLinearUpperLimit(btVector3(0,0,0));
+		pGen6Dof->getTranslationalLimitMotor()->m_enableMotor[5] = true;
+
+		return pGen6Dof;
 	}
 
 
@@ -540,12 +541,11 @@ int main(){
 	frameInA.setOrigin(btVector3(btScalar(0), btScalar(-1.2), btScalar(0.)));
 	frameInB.setOrigin(btVector3(btScalar(0), btScalar( 1.2), btScalar(0.)));
 
-
 	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false );
 	dynamicsWorld->addConstraint(pGen6Dof);
 
 	pGen6Dof->setAngularLowerLimit(btVector3(0,0,-M_PI));
-	pGen6Dof->setAngularUpperLimit(btVector3(0,0,0));
+	pGen6Dof->setAngularUpperLimit(btVector3(0,0,M_PI));
 	pGen6Dof->setLinearLowerLimit(btVector3(0,0,0));
 	pGen6Dof->setLinearUpperLimit(btVector3(0,0,0));
 

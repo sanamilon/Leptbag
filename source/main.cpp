@@ -26,6 +26,7 @@
 #include "floorshape.hpp"
 #include "constraints.hpp"
 #include "commonshape.hpp"
+#include "muscle.hpp"
 
 GLFWwindow* window;
 
@@ -374,27 +375,36 @@ int main(){
 		(elem)();
 	}
 
-	cubeshapeObject* cubeA = cubeshape::create(vec3(5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
-	cubeshapeObject* cubeB = cubeshape::create(vec3(-5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
 
+	// "MAKE MUSCLE GREAT AGAIN"
+	cubeshapeObject* cubeA = cubeshape::create(vec3(0,   5, -5), vec3(0.2, 1, 0.2), quat(1, 0, 0, 0), 0, dynamicsWorld);
+	cubeshapeObject* cubeB = cubeshape::create(vec3(0, 3.6, -5), vec3(0.2, 1, 0.2), quat(1, 0, 0, 0), 1, dynamicsWorld);
+
+	// contractileElementはmuscle.hppで定義されてるヨ
+	// contractileElement(物体A, 物体B, Aでの接続点, Bでの接続点)
+	contractileElement* muscle     = new contractileElement(cubeA, cubeB, btVector3( 0.2,  0.9, 0.), btVector3( 0.2, 1.0, 0.), 2);
+	contractileElement* ant_muscle = new contractileElement(cubeA, cubeB, btVector3(-0.2, -1.0, 0.), btVector3(-0.2, 1.0, 0.), 2);
+
+	// それぞれの物体の重心を原点としてローカル座標をとる。
 	btTransform frameInA, frameInB;
 	frameInA = cubeA->body->getCenterOfMassTransform();
 	frameInB = cubeB->body->getCenterOfMassTransform();
-	frameInA.setOrigin(btVector3(btScalar(-1), btScalar(0.), btScalar(0.)));
-	frameInB.setOrigin(btVector3(btScalar( 1), btScalar(0.), btScalar(0.)));
+	// デフォルトの関節の接点を相対座標で指定する
+	frameInA.setOrigin(btVector3(btScalar(0), btScalar(-1.2), btScalar(0.)));
+	frameInB.setOrigin(btVector3(btScalar(0), btScalar( 1.2), btScalar(0.)));
 
-
-	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false );
-	dynamicsWorld->addConstraint(pGen6Dof);
-
-	pGen6Dof->setAngularLowerLimit(btVector3(0,0,0));
-	pGen6Dof->setAngularUpperLimit(btVector3(0,0,0));
+	// 関節。メソッド化が急がれる。
+	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false);
+	pGen6Dof->setAngularLowerLimit(btVector3(0,0,-M_PI));
+	pGen6Dof->setAngularUpperLimit(btVector3(0,0,M_PI));
 	pGen6Dof->setLinearLowerLimit(btVector3(0,0,0));
 	pGen6Dof->setLinearUpperLimit(btVector3(0,0,0));
+	pGen6Dof->getRotationalLimitMotor(2)->m_enableMotor = true;
+	dynamicsWorld->addConstraint(pGen6Dof);
 
-	//pGen6Dof->getTranslationalLimitMotor()->m_enableMotor[0] = true;
-	//pGen6Dof->getTranslationalLimitMotor()->m_targetVelocity[0] = 5.0f;
-	//pGen6Dof->getTranslationalLimitMotor()->m_maxMotorForce[0] = 10.0f;
+	// モーターを動かす的
+	pGen6Dof->getRotationalLimitMotor(2)->m_targetVelocity = M_PI / 8;
+	pGen6Dof->getRotationalLimitMotor(2)->m_maxMotorForce = 1.;
 
 
 	glEnableVertexAttribArray(0);
