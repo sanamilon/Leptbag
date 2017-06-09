@@ -31,6 +31,8 @@ public:
     cubeshapeObject* cubeB;
     btVector3 attachInA;
     btVector3 attachInB;
+    btVector3 preB;
+    btVector3 forceV;
 
     float length;       // 現在の長さ
     float opt_length;   // 最適長
@@ -48,6 +50,7 @@ public:
 
     contractileElement(cubeshapeObject* cubeA, cubeshapeObject* cubeB, float ax, float ay, float az, float bx, float by, float bz, float length);
     virtual void contract(float act);
+    virtual float antRate();
     virtual float fL();
     virtual float fV();
     virtual float getForce();

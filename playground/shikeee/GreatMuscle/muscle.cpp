@@ -9,14 +9,15 @@ contractileElement::contractileElement(cubeshapeObject* cubeA, cubeshapeObject* 
 	this->cubeB = cubeB;
 	this->attachInA = btVector3(ax, ay, az);
     this->attachInB = btVector3(bx, by, bz);
+	this->preB = localToWorld(cubeB, btVector3(bx, by, bz));
 	this->length = length;
 	this->rest_length = length;
 
-	this->force = 0.0;
+	this->forceV = btVector3(0,0,0);
 	this->opt_length = 1.0;
-	this->max_force  = 40;
-	this->max_velocity = -1.0;
-	this->act = 0.01;
+	this->max_force  = 15;
+	this->max_velocity = 0.01;
+	this->act = 0.08;
 	this->w = 0.4;
     this->N = 1.5;
     this->K = 5;
@@ -59,10 +60,21 @@ void contractileElement::contract(float act){
 	btVector3 dir = (aInWorld - bInWorld).normalize();
 
 	// 目的の方向に力を加える
-	btVector3 forceV = dir * act * max_force;
+	forceV = dir * act * max_force;
 	cubeA->body->applyForce(-forceV, attachInA);
-	std::cout << forceV.getX() <<", "<< forceV.getY() <<", "<< forceV.getZ() << std::endl;;
+	std::cout << forceV.getX() <<", "<< forceV.getY() <<", "<< forceV.getZ() << std::endl;
 	cubeB->body->applyForce(forceV, attachInB);
+}
+
+float contractileElement::antRate(){
+	float velocity;
+	float act_ant;
+	btVector3 nowB = localToWorld(cubeB, attachInB);
+	btVector3 diff = nowB - preB;
+	velocity = diff.length();
+	preB = nowB;
+	act_ant = (velocity < max_velocity)? velocity / max_velocity : 1.0;
+	return act_ant;
 }
 
 float contractileElement::fL(){
