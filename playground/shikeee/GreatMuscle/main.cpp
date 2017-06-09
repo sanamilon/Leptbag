@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <dirent.h>
+#include <cmath>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,6 +27,7 @@
 #include "floorshape.hpp"
 #include "constraints.hpp"
 #include "commonshape.hpp"
+#include "muscle.hpp"
 
 GLFWwindow* window;
 
@@ -374,20 +376,23 @@ int main(){
 		(elem)();
 	}
 
-	cubeshapeObject* cubeA = cubeshape::create(vec3(5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
-	cubeshapeObject* cubeB = cubeshape::create(vec3(-5, 0, 0), vec3(1, 1, 1), quat(1, 0, 0, 0), 1, dynamicsWorld);
+	// 筋肉を作ってます
+	cubeshapeObject* cubeA = cubeshape::create(vec3(0, 5, -5), vec3(0.2, 1, 0.2), quat(1, 0, 0, 0), 0, dynamicsWorld);
+	cubeshapeObject* cubeB = cubeshape::create(vec3(0, 3.6, -5), vec3(0.2, 1, 0.2), quat(1, 0, 0, 0), 1, dynamicsWorld);
+
+	contractileElement* muscle = new contractileElement(cubeA, cubeB, 0.3, -0.9, 0., 0.3, -1, 0., 2);
 
 	btTransform frameInA, frameInB;
 	frameInA = cubeA->body->getCenterOfMassTransform();
 	frameInB = cubeB->body->getCenterOfMassTransform();
-	frameInA.setOrigin(btVector3(btScalar(-1), btScalar(0.), btScalar(0.)));
-	frameInB.setOrigin(btVector3(btScalar( 1), btScalar(0.), btScalar(0.)));
+	frameInA.setOrigin(btVector3(btScalar(0), btScalar(-1.2), btScalar(0.)));
+	frameInB.setOrigin(btVector3(btScalar(0), btScalar( 1.2), btScalar(0.)));
 
 
 	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false );
 	dynamicsWorld->addConstraint(pGen6Dof);
 
-	pGen6Dof->setAngularLowerLimit(btVector3(0,0,0));
+	pGen6Dof->setAngularLowerLimit(btVector3(0,0,-M_PI));
 	pGen6Dof->setAngularUpperLimit(btVector3(0,0,0));
 	pGen6Dof->setLinearLowerLimit(btVector3(0,0,0));
 	pGen6Dof->setLinearUpperLimit(btVector3(0,0,0));
@@ -405,6 +410,8 @@ int main(){
 	glEnableVertexAttribArray(5);
 	glEnableVertexAttribArray(6);
 
+	int counter = 0;
+	bool wait = true;
 
 
 	//毎フレームごとにこの中が実装される。
@@ -418,9 +425,21 @@ int main(){
 			(elem)();
 		}
 
+
+
 		//物理演算1ステップ進める
 		dynamicsWorld->stepSimulation(1 / 60.f, 10);
 
+		// 収縮
+		if(!wait) muscle->contract(1.0);
+
+
+		if(counter < 100)
+			counter++;
+		else{
+			wait = false;
+			counter = 0;
+		}
 
 		//OpenGL描画
 		glUseProgram(programID);
