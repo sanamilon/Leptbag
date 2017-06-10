@@ -31,29 +31,15 @@ public:
     cubeshapeObject* cubeB;
     btVector3 attachInA;
     btVector3 attachInB;
-    btVector3 preB;
-    btVector3 forceV;
-
-    float length;       // 現在の長さ
-    float opt_length;   // 最適長
-    float rest_length;  // たるんだ時の長さ(最大長)
-    float force;
-    float preForce;
+    float angle;
     float max_force;
-    float velocity;
-    float max_velocity;
-    float act;
 
-    float w; // fL曲線の鐘の幅
-    float N; // エンハンス
-    float K; // 曲率
 
-    contractileElement(cubeshapeObject* cubeA, cubeshapeObject* cubeB, btVector3 attachInA, btVector3 attachInB, float length);
-    virtual void contract(float act);
-    virtual float antRate();
-    virtual float fL();
-    virtual float fV();
-    virtual float getForce();
+    contractileElement(cubeshapeObject* cubeA, cubeshapeObject* cubeB, btVector3 attachInA, btVector3 attachInB, float length, float angle);
+    virtual float getTorque(float u);
+    virtual float activationDynamics(float u);
+    virtual float contractionDynamics(float act);
+    virtual float updateJointMoments(float force);
     virtual btVector3 localToWorld(cubeshapeObject* cube, btVector3 inLocal);
 };
 

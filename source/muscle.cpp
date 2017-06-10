@@ -3,25 +3,17 @@
 #include <iostream>
 #include <cmath>
 
-contractileElement::contractileElement(cubeshapeObject* cubeA, cubeshapeObject* cubeB, btVector3 attachInA, btVector3 attachInB, float length){
+contractileElement::contractileElement(cubeshapeObject* cubeA, cubeshapeObject* cubeB, btVector3 attachInA, btVector3 attachInB, float angle, float max_force){
 	//this->id = id;
 	this->cubeA = cubeA;
 	this->cubeB = cubeB;
 	this->attachInA = attachInA;
     this->attachInB = attachInB;
-	this->preB = localToWorld(cubeB, attachInB);
-	this->length = length;
-	this->rest_length = length;
-
-	this->forceV = btVector3(0,0,0);
-	this->opt_length = 1.0;
-	this->max_force  = 15;
-	this->max_velocity = 0.01;
-	this->act = 0.08;
-	this->w = 0.4;
-    this->N = 1.5;
-    this->K = 5;
+	this->angle = angle;
+	this->max_force  = max_force;
 }
+
+// このメソッド、今のところ使いみちないけど便利そうだからとっておく。
 btVector3 contractileElement::localToWorld(cubeshapeObject* cube, btVector3 inLocal){
 	btVector3 axis  = cube->body->getOrientation().getAxis();
 	btScalar angle = btScalar(cube->body->getOrientation().getAngle());
@@ -37,62 +29,33 @@ btVector3 contractileElement::localToWorld(cubeshapeObject* cube, btVector3 inLo
 
 	return(inWorld);
 }
-void contractileElement::contract(float act){
-	/* ✝無視された計算式の墓場✝
 
-	velocity = act * max_velocity;
-	float f;
-	if(velocity < max_velocity) velocity = max_velocity;
-	length += velocity * (1 / 60.f);
-
-	if(length <= rest_length){
-		force =  act * max_force * fL() * fV();
-		//std::cout << force << std::endl;
-	} else {
-		force = 0;
-	}
-	*/
-
-	// 加える力の方向を求める
-	btVector3 aInWorld = localToWorld(cubeA, attachInA);
-	btVector3 bInWorld = localToWorld(cubeB, attachInB);
-
-	btVector3 dir = (aInWorld - bInWorld).normalize();
-
-	// 目的の方向に力を加える
-	forceV = dir * act * max_force;
-	cubeA->body->applyForce(-forceV, attachInA);
-	std::cout << forceV.getX() <<", "<< forceV.getY() <<", "<< forceV.getZ() << std::endl;
-	cubeB->body->applyForce(forceV, attachInB);
+float contractileElement::getTorque(float u){
+	// これが筋肉モデルのすべて
+	float act    = activationDynamics(u);
+	float force  = contractionDynamics(act);
+	float torque = updateJointMoments(force);
+	return torque;
 }
 
-float contractileElement::antRate(){
-	float velocity;
-	float act_ant;
-	btVector3 nowB = localToWorld(cubeB, attachInB);
-	btVector3 diff = nowB - preB;
-	velocity = diff.length();
-	preB = nowB;
-	act_ant = (velocity < max_velocity)? velocity / max_velocity : 1.0;
-	return act_ant;
+// 以下のメソッドを徐々に拡充させていく. 今はちょっとテキトー。
+float contractileElement::activationDynamics(float u){
+	// 励起信号から筋肉活性率を求める。
+	 float act = u;
+	 return act;
 }
 
-float contractileElement::fL(){
-	float Q = exp(log(0.05) * pow(std::abs((length - opt_length)/(opt_length * w)), 3));
-	return Q;
-}
-
-float contractileElement::fV(){
-	float Q;
-	if(velocity >= 0){
-		Q = N + (N-1)*((max_velocity + velocity)/(7.56 * K * velocity - max_velocity));
-	} else {
-		Q = (max_velocity - velocity)/(max_velocity + K * velocity);
-	}
-	std::cout << Q << std::endl;
-	return Q;
-}
-
-float contractileElement::getForce(){
+float contractileElement::contractionDynamics(float act){
+	// 力の大きさを計算
+	float force = act * max_force;
 	return force;
+}
+
+float contractileElement::updateJointMoments(float force){
+	// モーメントアームと垂直成分を求める
+	float r = attachInB.getY();
+	float f = force * sin(angle);
+
+	// トルクを出力
+	return r * f;
 }

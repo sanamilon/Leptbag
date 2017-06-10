@@ -382,16 +382,16 @@ int main(){
 
 	// contractileElementはmuscle.hppで定義されてるヨ
 	// contractileElement(物体A, 物体B, Aでの接続点, Bでの接続点)
-	contractileElement* muscle     = new contractileElement(cubeA, cubeB, btVector3( 0.2,  0.9, 0.), btVector3( 0.2, 1.0, 0.), 2);
-	contractileElement* ant_muscle = new contractileElement(cubeA, cubeB, btVector3(-0.2, -1.0, 0.), btVector3(-0.2, 1.0, 0.), 2);
+	contractileElement* muscle     = new contractileElement(cubeA, cubeB, btVector3( 0.2,  0.9, 0.), btVector3( 0.2, 1.0, 0.), M_PI/6, 10);
+	contractileElement* ant_muscle = new contractileElement(cubeA, cubeB, btVector3(-0.2, -1.0, 0.), btVector3(-0.2, 1.0, 0.), M_PI/6, 10);
 
 	// それぞれの物体の重心を原点としてローカル座標をとる。
 	btTransform frameInA, frameInB;
 	frameInA = cubeA->body->getCenterOfMassTransform();
 	frameInB = cubeB->body->getCenterOfMassTransform();
 	// デフォルトの関節の接点を相対座標で指定する
-	frameInA.setOrigin(btVector3(btScalar(0), btScalar(-1.2), btScalar(0.)));
-	frameInB.setOrigin(btVector3(btScalar(0), btScalar( 1.2), btScalar(0.)));
+	frameInA.setOrigin(btVector3(btScalar(0), btScalar(-1.9), btScalar(0.)));
+	frameInB.setOrigin(btVector3(btScalar(0), btScalar( 1.9), btScalar(0.)));
 
 	// 関節。メソッド化が急がれる。
 	btGeneric6DofConstraint* pGen6Dof = new btGeneric6DofConstraint(*(cubeA->body), *(cubeB->body), frameInA, frameInB, false);
@@ -403,8 +403,6 @@ int main(){
 	dynamicsWorld->addConstraint(pGen6Dof);
 
 	// モーターを動かす的
-	pGen6Dof->getRotationalLimitMotor(2)->m_targetVelocity = M_PI / 8;
-	pGen6Dof->getRotationalLimitMotor(2)->m_maxMotorForce = 1.;
 
 
 	glEnableVertexAttribArray(0);
@@ -431,6 +429,8 @@ int main(){
 		//物理演算1ステップ進める
 		dynamicsWorld->stepSimulation(1 / 60.f, 10);
 
+		pGen6Dof->getRotationalLimitMotor(2)->m_maxMotorForce = muscle->getTorque(0.1);
+		pGen6Dof->getRotationalLimitMotor(2)->m_targetVelocity = 8;
 
 		//OpenGL描画
 		glUseProgram(programID);
