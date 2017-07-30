@@ -128,5 +128,15 @@ extern (C++) {
 
 extern (C) {
 	hingeConstraint hingeConstraint_create(elementNode cubeA, elementNode cubeB, vec3 positionA, vec3 positionB, vec3 axis);
-	generic6DofConstraint generic6DofConstraint_create(elementNode elemA, elementNode elemB, vec3 positionA, vec3 positionB);
+	generic6DofConstraint generic6DofConstraint_create(elementNode elemA, elementNode elemB, vec3 positionA, vec3 positionB, bool rotate);
+}
+
+extern (C++) {
+	interface contractileElement{
+		float getTorque(float u);
+	}
+}
+
+extern (C) {
+	contractileElement contractileElement_create(elementNode elemA, elementNode elemB, vec3 attachInA, vec3 attachInB, float angle, float max_force);
 }

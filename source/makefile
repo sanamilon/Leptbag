@@ -1,7 +1,7 @@
-japari_park: main.o elementNode.o elementManager.o bodyGenerator.o  constraints.o vertexmanager.o shader.o universalVector.o parameterPack.o universalString.o primitiveShape.o
-	g++ -rdynamic --std=c++1z -L /usr/local/lib/ -ldl -l BulletDynamics -l BulletCollision -l LinearMath -l glfw -lglew -framework OpenGL -o japari_park main.o elementNode.o elementManager.o bodyGenerator.o constraints.o vertexmanager.o shader.o universalVector.o parameterPack.o universalString.o primitiveShape.o
+japari_park: main.o elementNode.o elementManager.o bodyGenerator.o  constraints.o vertexmanager.o shader.o universalVector.o parameterPack.o universalString.o primitiveShape.o muscle.o
+	g++ -rdynamic --std=c++1z -L /usr/local/lib/ -ldl -l BulletDynamics -l BulletCollision -l LinearMath -l glfw -lglew -framework OpenGL -o japari_park main.o elementNode.o elementManager.o bodyGenerator.o constraints.o vertexmanager.o shader.o universalVector.o parameterPack.o universalString.o primitiveShape.o muscle.o
 
-main.o: main.cpp 
+main.o: main.cpp
 	g++ --std=c++1z -I /usr/local/include/ -I /usr/local/include/bullet/ -I /usr/local/Cellar/glm/0.9.8.4/include -c main.cpp
 
 elementNode.o: elementNode.cpp elementNode.hpp
@@ -10,7 +10,7 @@ elementNode.o: elementNode.cpp elementNode.hpp
 elementManager.o: elementManager.cpp elementManager.hpp elementNode.hpp
 	g++ --std=c++1z -I /usr/local/include/ -I /usr/local/include/bullet/ -I /usr/local/Cellar/glm/0.9.8.4/include -c elementManager.cpp
 
-bodyGenerator.o: bodyGenerator.cpp bodyGenerator.hpp 
+bodyGenerator.o: bodyGenerator.cpp bodyGenerator.hpp
 	g++ --std=c++1z -I /usr/local/include/ -I /usr/local/include/bullet/ -I /usr/local/Cellar/glm/0.9.8.4/include -c bodyGenerator.cpp
 
 constraints.o: constraints.cpp constraints.hpp
@@ -33,6 +33,9 @@ universalString.o: utilities/universalString.cpp
 
 primitiveShape.o: primitiveShape.cpp primitiveShape.hpp
 	g++ -g -O0 --std=c++1z -I /usr/local/include/ -I /usr/local/include/bullet/ -I /usr/local/Cellar/glm/0.9.8.4/include -c primitiveShape.cpp
+
+muscle.o: muscle.cpp muscle.hpp
+	g++ -g -O0 --std=c++1z -I /usr/local/include/ -I /usr/local/include/bullet/ -I /usr/local/Cellar/glm/0.9.8.4/include -c muscle.cpp
 
 clean:
 	rm -f *.o

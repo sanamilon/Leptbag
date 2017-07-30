@@ -60,7 +60,7 @@ std::vector<pluginfunc_t> pluginTickVector;
 
 
 //カメラの位置など
-glm::vec3 position = glm::vec3( 0, 0, 0 ); 
+glm::vec3 position = glm::vec3( 0, 0, 0 );
 double horizontalAngle = 3.14f;
 double verticalAngle = 0.0f;
 
@@ -100,7 +100,7 @@ void computeMatricesFromInputs(){
 
 	//カメラの向きを計算する
 	glm::vec3 direction(
-			cos(verticalAngle) * sin(horizontalAngle), 
+			cos(verticalAngle) * sin(horizontalAngle),
 			sin(verticalAngle),
 			cos(verticalAngle) * cos(horizontalAngle)
 			);
@@ -416,7 +416,12 @@ int main(){
 		(elem)();
 	}
 
-
+	int maxSerializeBufferSize = 1024*1024*5;
+	btDefaultSerializer* serializer = new btDefaultSerializer(maxSerializeBufferSize);
+	dynamicsWorld->serialize(serializer);
+	FILE* file = fopen("testFile.bullet","wb");
+	fwrite(serializer->getBufferPointer(),serializer->getCurrentBufferSize(),1, file);
+	fclose(file);
 
 
 
