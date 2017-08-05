@@ -38,7 +38,7 @@ vec3[string] hingeObject2Position;
 class blender2bullet{
 
 	elementNode[string] parts;
-	hingeConstraint[string] hinges;
+	generic6DofConstraint[string] hinges;
 
 
 	this(float x, float y, float z){
@@ -64,10 +64,10 @@ class blender2bullet{
 		}
 
 		foreach(s; hingeName){
-			hinges[s] = hingeConstraintWithRotation(parts[hingeObject1Name[s]], parts[hingeObject2Name[s]],
+			hinges[s] = generic6DofConstraint_create(parts[hingeObject1Name[s]], parts[hingeObject2Name[s]],
 					hingeObject1Position[s], hingeObject2Position[s], hingeRotation[s]);
 					//createVec3(0.0f, -1.0f, 0.0f));
-			hinges[s].setLimit(limitLower[s], limitUpper[s]);
+			//hinges[s].setLimit(limitLower[s], limitUpper[s]);
 			//hinges[s].enableMotor(true);
 			//hinges[s].setMaxMotorImpulse(5);
 		}
