@@ -14,14 +14,14 @@
 │   └── fpmExporter.py ブレンダーで作ったモデルをjsonで出力するプラグイン
 ├── classes.txt        なんだこれ？？？？？？
 ├── friends            japariに読み込ませるプラグインを開発するフォルダ
-│   ├── blender2bullet 
+│   ├── blender2bullet
 │   ├── choroDog       
-│   ├── gen6DofInsect  
+│   ├── learningKame   てきとーな筋肉のカメ
 │   ├── learningsimpledog  てきとーな遺伝的アルゴリズムをぶち込んだ犬
 │   ├── lowPolyTree    ローポリの木を表示するテスト
 │   ├── plankTower     ジェンガが倒れる様を観察するテスト
 │   ├── simpleFloor    床プラグイン。人気度ナンバーワン
-│   ├── simpleWolf(deprecated) 
+│   ├── simpleWolf(deprecated)
 │   ├── simpledog      犬が適当に歩く
 │   └── simplefence    てきとーなフェンスがスポーンする
 ├── japariSDK          Dのライブラリを開発するところ
