@@ -7,77 +7,31 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
-import libGA;
+import GA;
+import DEforOscillator2;
+import Oscillator;
+import params;
 
 Random rnd;
 
-//strategy 0:do not learn, 1:DE, 2:simple GA
-int strategy = 0;
+//strategy 0:do not learn, 1:HingeDE, 2:simple GA, 3:6dofDE
+const int strategy = 3;
+const int dogNum = 50;
 
-string measuredPart = "head";
-int dogNum = 80;
-int attackProbability = 30;
-float bodyMass = 42.592;
+string measuredPart = "head"; //この名前のパーツの移動距離を測る
+const int attackProbability = 30; //simpleGAの突然変異確率
+const float bodyMass = 42.592; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 
-chorodog[] chorodogs;
+chorodog[] chorodogs; //メイン
+chorodog[] evaluateds; //DEにおける突然変異個体
 
 elementManager[string] partsGenerator;
 
-struct partParam{
 
-	vertexManager vertices;
-	vec3 position;
-	vec3 scale;
-	quat rotation;
-	float mass;
-
-}
-
-
-
-struct hingeParam{
-
-	string name;
-	vec3 position;
-	vec3 axis1;
-	vec3 axis2;
-	string object1Name;
-	string object2Name;
-	vec3 object1Position;
-	vec3 object2Position;
-	bool enabled;
-	bool useLimit;
-	float limitLower;
-	float limitUpper;
-
-
-}
-
-struct g6dofParam{
-
-	string name;
-	bool enabled;
-	vec3 position;
-	quat rotation;
-	string object1Name;
-	string object2Name;
-	vec3 object1Position;
-	vec3 object2Position;
-	bool[3] useAngLimit;
-	vec3 angLimitLower;
-	vec3 angLimitUpper;
-	bool[3] useLinLimit;
-	vec3 linLimitLower;
-	vec3 linLimitUpper;
-
-}
-
-
-partParam[string] partParams;
-hingeParam[string] hingeParams;
-g6dofParam[string] g6dofParams;
-
-
+//fpmからの読取用
+partParam[string] partParams; //身体パーツのパラメータ
+hingeParam[string] hingeParams; //ヒンジのパラメータ
+g6dofParam[string] g6dofParams; //g6dofのパラメータ
 
 
 
@@ -87,22 +41,27 @@ class chorodog{
 	elementNode[string] parts;
 	hingeConstraint[string] hinges;
 	generic6DofConstraint[string] g6dofs;
-	float neko = 0;
+	oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
 
-	float[string][20] dna;
+	float[string][20] dna; //simpleGAにおける遺伝子
 
 	this(float x, float y, float z, bool initialDNA){
+
 
 		spawn(createVec3(x, y, z));
 
 		if(initialDNA == true){
-			foreach(string s, hinge; hinges){
-				if(hingeParams[s].enabled){
-					for(int row = 0; row < 20; row++){
-						dna[row][s] = uniform(-PI/2, PI/2, rnd);
-					}
-				}
-			}
+			/*
+			   foreach(string s, hinge; hinges){
+			   if(hingeParams[s].enabled){
+			   for(int row = 0; row < 20; row++){
+			   dna[row][s] = uniform(-PI/2, PI/2, rnd);
+			   }
+			   }
+			   }
+			 */
+
+
 		}
 
 	}
@@ -119,10 +78,11 @@ class chorodog{
 						param("model",    partParams[s].vertices),
 						param("mass",
 							//0.0f)));
-							partParams[s].mass * bodyMass)));
+				partParams[s].mass * bodyMass)));
 
 		}
 
+		//ヒンジ
 		foreach(string s, param; hingeParams){
 			hinges[s] = hingeConstraint_create(parts[hingeParams[s].object1Name], parts[hingeParams[s].object2Name],
 					hingeParams[s].object1Position, hingeParams[s].object2Position,
@@ -134,61 +94,79 @@ class chorodog{
 			}
 		}
 
+		//6Dof
 		foreach(string s, param; g6dofParams){
 			g6dofs[s] = generic6DofConstraint_create(parts[g6dofParams[s].object1Name], parts[g6dofParams[s].object2Name],
 					g6dofParams[s].object1Position, g6dofParams[s].object2Position,
 					g6dofParams[s].rotation);
+		}
+
+		parts = parts.rehash;
+		hinges = hinges.rehash;
+		g6dofs = g6dofs.rehash;
+
+		gene.init();
+		foreach(part; parts) part.setFriction(gene.friction);
+
+		foreach(string s, dof; g6dofs){
+
+			gene.init(s);
+
 
 			for(int i=0; i<3; i++){
 				if(g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
 				if(g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
 			}
 
+
+			//for test
+			vec3 testVec3Low = createVec3( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
+			vec3 testVec3Up = createVec3( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
+
 			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
-			g6dofs[s].setAngularLimit( g6dofParams[s].angLimitLower, g6dofParams[s].angLimitUpper );
 
-
+			g6dofs[s].setAngularLimit( gene.angLimitLower[s], gene.angLimitUpper[s] );
 			g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
 
-
-			/*
-			g6dofs[s].setLinearTargetVelocity(createVec3(
-						uniform(g6dofParams[s].linLimitLower.getx(), g6dofParams[s].linLimitUpper.getx(), rnd),
-						uniform(g6dofParams[s].linLimitLower.gety(), g6dofParams[s].linLimitUpper.gety(), rnd),
-						uniform(g6dofParams[s].linLimitLower.getz(), g6dofParams[s].linLimitUpper.getz(), rnd)));
-						*/
-
 			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
-			g6dofs[s].setMaxRotationalMotorForce( 0, 5.0);
-			g6dofs[s].setMaxRotationalMotorForce( 1, 5.0);
-			g6dofs[s].setMaxRotationalMotorForce( 2, 5.0);
-			g6dofs[s].setMaxLinearMotorForce( zeroVec3 );
-		}
+			g6dofs[s].setMaxRotationalMotorForce( 0, gene.maxForce[s].getx() );
+			g6dofs[s].setMaxRotationalMotorForce( 1, gene.maxForce[s].gety() );
+			g6dofs[s].setMaxRotationalMotorForce( 2, gene.maxForce[s].getz() );
 
+
+		}
+		gene.rehash();
 
 
 	}
 
 	void move(int sequence){
-		if(hinges.length!=0) foreach(string s, hinge; hinges){
-			if(hingeParams[s].enabled){
-				float target = abs(hingeParams[s].limitLower-hingeParams[s].limitUpper) * dna[sequence][s] * 2.0/PI;
-				hinge.setMotorTarget(target, 0.5);
-			}
+
+		if(g6dofs.length!=0) foreach(string s, dof; g6dofs){
+			gene.oscil.setTheta(s, dof.getAngle(0)); //thetaがx方向の関節移動
+			gene.oscil.setPhi(s, dof.getAngle(1)); //phiがz方向の関節移動
 		}
-		g6dofs["Constraint.003"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko), 0.0f));
-		g6dofs["Constraint.001"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko-PI/2.0), 0.0f));
-		g6dofs["Constraint.002"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko-PI), 0.0f));
-		g6dofs["Constraint.004"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko-PI*3.0/2.0), 0.0f));
 
-		neko += 0.3f;
-		if(neko>=2.0*3.14f) neko -= 2.0*3.14f;
+		//theta, phiは角度ではなく，単に移動を行う度合いと考えてよい
+		float[string] deltaTheta = gene.oscil.calculateDeltaTheta();
+		float[string] deltaPhi = gene.oscil.calculateDeltaPhi();
 
-			/*
-						uniform(g6dofParams[s].angLimitLower.getx(), g6dofParams[s].angLimitUpper.getx(), rnd),
-						uniform(g6dofParams[s].angLimitLower.gety(), g6dofParams[s].angLimitUpper.gety(), rnd),
-						uniform(g6dofParams[s].angLimitLower.getz(), g6dofParams[s].angLimitUpper.getz(), rnd)));
-						*/
+		//sinでdeltaTheta, deltaPhiを-1.0~1.0にリミットしている
+		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3(
+					gene.maxVelo[s].getx()*sin(deltaTheta[s]), gene.maxVelo[s].gety()*sin(deltaPhi[s]), 0.0f ) );
+
+
+		/+
+			if(hinges.length!=0) foreach(string s, hinge; hinges){
+				if(hingeParams[s].enabled){
+					float target = abs(hingeParams[s].limitLower-hingeParams[s].limitUpper) * dna[sequence][s] * 2.0/PI;
+					hinge.setMotorTarget(target, 0.5);
+				}
+			}
+		+/
+
+
+
 	}
 
 	void despawn(){
@@ -214,7 +192,9 @@ extern (C) void init(){
 		//HACK コンパイル時にjsonStringにlowPolyTree.fpmの内容が代入される(要-Jオプション)
 		//auto jsonString = import("models/chorodog.fpm");
 		auto jsonString = import("models/chorodog6dof_simplified.fpm");
+		//auto jsonString = import("models/lowPolyFox_trimed.fpm");
 		//auto jsonString = import("models/chorodog_simplified.fpm");
+		//auto jsonString = import("models/lowPolyFox_6dof.fpm");
 
 		JSONValue model = parseJSON(jsonString);
 
@@ -225,9 +205,10 @@ extern (C) void init(){
 
 				partParams[name] = partParam();
 				partParams[name].position = createVec3(elem["xpos"].floating, elem["ypos"].floating, elem["zpos"].floating);
-				partParams[name].scale	= createVec3(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
+				partParams[name].scale = createVec3(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
 				partParams[name].rotation = createQuat(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
 				partParams[name].mass = elem["mass"].floating;
+				partParams[name].friction = elem["friction"].floating;
 
 				partParams[name].vertices = createVertexManager();
 
@@ -238,7 +219,6 @@ extern (C) void init(){
 				}
 
 				partsGenerator[name] = createElementManager(partParams[name].vertices, &createConvexHullShapeBody);
-
 
 			}
 		}
@@ -294,10 +274,18 @@ extern (C) void init(){
 
 			}
 		}
+		partParams = partParams.rehash;
+		hingeParams = hingeParams.rehash;
+		g6dofParams = g6dofParams.rehash;
 
+
+
+		//chorodogs生成
 		chorodogs.length = dogNum;
-
 		foreach(int i, ref elem; chorodogs) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
+
+		//最初が0世代目
+		if(strategy!=0) writeln("start generation : 0");
 
 
 
@@ -310,32 +298,39 @@ extern (C) void init(){
 
 }
 
-bool evaluation = false;
-float topRecord = 128.0;
+
+
+
+bool evaluation = false; //trueならDEの突然変異体評価フェイズ
+float topRecord = 128.0; //動物たちは-z方向に歩いていることに注意
 int timerDivisor = 0;
 int time = 0;
 int generation = 0;
 int sequence = 0;
-float[] preRecords;
-float[string][20][] preDNAs;
-chorodog[] evaluateds;
+float[dogNum] preRecords; //前回の移動距離を保存しておき，突然変異によってより大きく移動すれば突然変異体を採用
+float[string][20][dogNum] preDNAs; //for simple GA
 
 extern (C) void tick(){
+
 
 	if(timerDivisor++ == 6){
 		sequence = (sequence+1)%20;
 		timerDivisor = 0;
 
 		switch(strategy){
-			case 0:
+			case 0: //学習なし
 				foreach(elem; chorodogs) elem.move(sequence);
 				break;
-			case 1:
+			case 1: //振動子モデルを使わないDE
 				if(!evaluation) foreach(elem; chorodogs) elem.move(sequence);
 				else foreach(elem; evaluateds) elem.move(sequence);
 				break;
-			case 2:
+			case 2: //simple GA
 				foreach(elem; chorodogs) elem.move(sequence);
+				break;
+			case 3: //振動子モデル+DE
+				if(!evaluation) foreach(elem; chorodogs) elem.move(sequence);
+				else foreach(elem; evaluateds) elem.move(sequence);
 				break;
 			default: break;
 		}
@@ -345,17 +340,23 @@ extern (C) void tick(){
 		time++;
 
 	//世代終わり
-	if(time == 30 + generation*2){
+	if(time == 100 + generation*5){
 
 
-		float proRecordTmp = topRecord;
+		float proRecordTmp = 0.0; //この世代の最高移動距離
 
-		if(!evaluation){
-			generation++;
-			writeln("end generation: " ~ to!string(generation));
-		}else{
-			writeln("end evaluating to generation: " ~ to!string(generation));
+		if(strategy!=0){
+
+			if(!evaluation){
+				//評価フェイズ
+				if(strategy==3) writeln("start evaluation : ", generation);
+			}else{
+				writeln("start generation : ", ++generation);
+			}
+
+
 		}
+
 
 		time = 0;
 
@@ -368,10 +369,6 @@ extern (C) void tick(){
 			case 1:
 
 				if(!evaluation){
-
-					preRecords.length = chorodogs.length;
-					evaluateds.length = chorodogs.length;
-					preDNAs.length = chorodogs.length;
 
 					foreach(int i, dog; chorodogs){
 						preRecords[i] = dog.parts[measuredPart].getZpos();
@@ -463,6 +460,69 @@ extern (C) void tick(){
 					}
 
 				}
+
+				break;
+
+
+			//振動子モデル+DE
+			case 3:
+
+				if(!evaluation){ //各の移動距離を測るフェイズ
+
+					//geneにはtoString()が(中途半端に)実装されている
+					//chorodogs[0].gene.toString();
+
+					foreach(int i, ref elem; chorodogs){
+
+						//移動距離を記録
+						preRecords[i] = elem.parts[measuredPart].getZpos();
+						//今回の最高記録
+						if(proRecordTmp>elem.parts[measuredPart].getZpos()) proRecordTmp = elem.parts[measuredPart].getZpos();
+						//chorodogは一旦退場
+						elem.despawn();
+
+					}
+					//DEに用いるパラメータ
+					float ditherF = uniform(0.5f, 1.0f, rnd);
+
+					if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
+						evaluateds.length = dogNum;
+						foreach(int i, ref elem; evaluateds) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
+					}else{
+						//突然変異
+						evolve(evaluateds, chorodogs, 0.9f, ditherF);
+						//evaluatedsをpop
+						foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
+					}
+					evaluation = true; //次は突然変異体評価フェイズ
+
+				}else{ //突然変異体評価フェイズ
+
+					//evaluateds[0].gene.toString();
+
+					foreach(int i, ref elem; evaluateds){
+						//今回の最高記録
+						if(evaluateds[i].parts[measuredPart].getZpos() < proRecordTmp){
+							proRecordTmp = evaluateds[i].parts[measuredPart].getZpos();
+						}
+						//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
+						if(evaluateds[i].parts[measuredPart].getZpos() <= preRecords[i]){
+							chorodogs[i].gene = elem.gene;
+						}
+					}
+					//突然変異体は一旦退場
+					foreach(int i, ref elem; evaluateds) elem.despawn();
+					foreach(int i, ref elem; chorodogs) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
+					evaluation = false; //次は採用した突然変異体を混ぜて性能評価
+
+				}
+
+				//最高記録を表示
+				if(proRecordTmp<topRecord){
+					topRecord = proRecordTmp;
+					writeln("new record! : ", -1.0*topRecord);
+				}
+
 
 				break;
 

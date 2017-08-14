@@ -10,6 +10,8 @@ extern (C++) {
 		float getYpos();
 		float getZpos();
 		float getBasis(int row, int column);
+		float getFriction();
+		float setFriction(float coef);
 		void destroy();
 	}
 	interface btRigidBody{
@@ -118,6 +120,7 @@ extern (C++) {
 	}
 
 	interface generic6DofConstraint{
+		float getAngle(int index);
 		void setAngularLimit(vec3 lower, vec3 upper);
 		void setLinearLimit(vec3 lower, vec3 upper);
 		void setRotationalMotor(int index);
