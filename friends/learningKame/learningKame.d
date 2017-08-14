@@ -37,6 +37,8 @@ class kame{
 				bodyInfo.partsGenerator[name] = createElementManager(bodyInfo.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 
+		vec3 zeroVec3 = createVec3(0.0, 0.0, 0.0);
+
 
 		foreach(string s, partsGen; bodyInfo.partsGenerator){
 
@@ -66,6 +68,8 @@ class kame{
 			g6dofs[s] = generic6DofConstraint_create(parts[bodyInfo.g6dofParams[s].object1Name], parts[bodyInfo.g6dofParams[s].object2Name],
 					bodyInfo.g6dofParams[s].object1Position, bodyInfo.g6dofParams[s].object2Position,
 					bodyInfo.g6dofParams[s].rotation);
+			g6dofs[s].setAngularLimit(zeroVec3, zeroVec3);
+			g6dofs[s].setLinearLimit (zeroVec3, zeroVec3);
 		}
 
 
