@@ -79,7 +79,6 @@ struct serialOrderGene{
 	static uint lengthOfSet = 8;
 	Vector3f[string][] tracks;
 	bool[][] wavelengthOfOrder;
-	int[] moveSpan;
 	float friction;
 	float maxRotationalMotorForce;
 	Vector3f[string][] maxVelocity;
@@ -89,18 +88,16 @@ struct serialOrderGene{
 		auto rnd = Random(unpredictableSeed);
 
 		tracks.length = lengthOfSet;
-		moveSpan.length = lengthOfSet;
 		maxVelocity.length = lengthOfSet;
 
-		friction = uniform(0.1f, 8.0f, rnd);
-		maxRotationalMotorForce = uniform(0.0f, 30.0f, rnd);
+		this.initFriction();
+		this.initMaxRotationalMotorForce();
 
-		for(int i=0; i<moveSpan.length; i++) moveSpan[i] = uniform(1, 10, rnd);
 
 		wavelengthOfOrder.length = lengthOfSet;
 		for(int i=0; i<wavelengthOfOrder.length; i++){
 
-			wavelengthOfOrder[i].length = moveSpan[i];
+			wavelengthOfOrder[i].length = uniform(1, 10, rnd);
 
 			for(int j=0; j<wavelengthOfOrder[i].length; j++){
 				if(uniform(0.0f, 1.0f, rnd) < 0.5f) wavelengthOfOrder[i][j] = true;
@@ -194,6 +191,15 @@ struct serialOrderGene{
 
 	}
 
+	void initFriction(){
+		auto rnd = Random(unpredictableSeed);
+		this.friction = uniform(0.1f, 6.0f, rnd);
+	}
+
+	void initMaxRotationalMotorForce(){
+		auto rnd = Random(unpredictableSeed);
+		maxRotationalMotorForce = uniform(0.0f, 20.0f, rnd);
+	}
 
 	void copytracks(serialOrderGene u){
 		foreach(int i, elem1; this.tracks){

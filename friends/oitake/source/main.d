@@ -57,7 +57,7 @@ extern (C) void init(){
 
 	prepareAgentsGroup(agents, info);
 
-	writeln("made main groups of ", averageOf, "(", agentNum, " agent in each group");
+	writeln("made main groups of ", averageOf, "( ", agentNum, " agents in each group )");
 
 	//agents[0].checkSOG();
 
@@ -125,17 +125,6 @@ extern (C) void tick(){
 	if( time == (trialSpan + generation*generationStroke) ){
 
 		writeln();
-		/+
-		if(!evaluation){
-			writeln(agents[0].parts[measuredPart].getPos().z);
-			writeln(agents[agentNum].parts[measuredPart].getPos().z);
-			writeln(agents[2*agentNum].parts[measuredPart].getPos().z);
-
-			agents[0].checkSOG();
-			agents[agentNum].checkSOG();
-			agents[2*agentNum].checkSOG();
-		}
-		+/
 
 		time = 0;
 		timerDivisor = 0;
@@ -184,19 +173,13 @@ void terminateTrial(){
 		evaluatedsScores.length = agentNum*averageOf;
 	}
 
+
 	if(!evaluation){ //各個体の移動距離を測るフェイズ
-
-		//geneにはtoString()が(中途半端に)実装されている
-		//agents[0].gene.toString();
-
-
 
 		foreach(int i, ref elem; agents){
 
 			//移動距離を記録
 			preScores[i] += elem.parts[measuredPart].getPos().z;
-
-
 
 			for(int k=1; k<=averageOf; k++){
 				if(i<agentNum*k){
@@ -331,7 +314,6 @@ void terminateGeneration(){
 			auto rnd = Random(unpredictableSeed);
 			float ditherF = uniform(0.5f, 1.0f, rnd);
 			//突然変異
-			//evolveBest(evaluateds[0..agentNum], agents[0..agentNum], 0.1f, ditherF, bests);
 			evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 
 			for(int i=0; i<agentNum; i++){
@@ -353,43 +335,8 @@ void terminateGeneration(){
 			auto rnd = Random(unpredictableSeed);
 			float ditherF = uniform(0.5f, 1.0f, rnd);
 			//突然変異
-			//evolveBest(evaluateds[0..agentNum], agents[0..agentNum], 0.1f, ditherF, bests);
-
-			/+
-			writeln("before evolution");
-			foreach(int i, elem; evaluateds){
-				if(i<1){
-					writeln("evaluateds[", i, "]");
-					evaluateds[i].checkSOG();
-				}
-			}
-
-			foreach(int i, elem; agents){
-				if(i<1){
-					writeln("best agents[", bests[0], "]");
-					agents[bests[0]].checkSOG();
-				}
-			}
-			+/
-
 			evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 
-			/+
-			writeln("after evolution");
-			foreach(int i, elem; evaluateds){
-				if(i<1){
-					writeln("evaluateds[", i, "]");
-					evaluateds[i].checkSOG();
-				}
-			}
-
-			foreach(int i, elem; agents){
-				if(i<1){
-					writeln("best agents[", bests[0], "]");
-					agents[bests[0]].checkSOG();
-				}
-			}
-			+/
 
 			for(int i=0; i<agentNum; i++){
 				for(int j=1; j<averageOf; j++){
@@ -397,34 +344,6 @@ void terminateGeneration(){
 				}
 			}
 		}
-
-		/*
-		writeln("buma");
-		writeln("child");
-		foreach(string s, dof; evaluateds[0].g6dofs){
-			write(s, " ( ");
-			for(uint i=0; i<evaluateds[0].SOG.tracks.length; i++){
-				write(i, ": ", evaluateds[0].SOG.tracks[i][s].getx(), ", ");
-			}
-			writeln(")");
-		}
-
-		foreach(string s, dof; agents[0].g6dofs){
-			write(s, " ( ");
-			for(uint i=0; i<agents[0].SOG.tracks.length; i++){
-				write(i, ":", agents[bests[0]].SOG.tracks[i][s].getx(), ", ");
-			}
-			writeln(")");
-		}
-
-		foreach(string s, dof; agents[0].g6dofs){
-			write(s, " ( ");
-			for(uint i=0; i<agents[0].SOG.tracks.length; i++){
-				write(i, ":", agents[bests[1]].SOG.tracks[i][s].getx(), ", ");
-			}
-			writeln(")");
-		}
-		*/
 
 		evaluation = true; //次は突然変異体評価フェイズ
 

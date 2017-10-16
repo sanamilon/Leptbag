@@ -168,6 +168,9 @@ class agent{
 	void copyGene(agent parent){
 		//this.gene = parent.gene;
 		this.SOG.tracks = parent.SOG.tracks;
+		this.SOG.friction = parent.SOG.friction;
+		this.SOG.maxRotationalMotorForce = parent.SOG.maxRotationalMotorForce;
+		this.SOG.wavelengthOfOrder = parent.SOG.wavelengthOfOrder;
 	}
 
 
@@ -188,7 +191,7 @@ class agent{
 
 
 	void updateBiologicalClock(){
-		if(++this.biologicalClock==this.SOG.moveSpan[this.sequenceOfOrder]){
+		if(++this.biologicalClock==this.SOG.wavelengthOfOrder[this.sequenceOfOrder].length){
 			this.sequenceOfOrder = (++this.sequenceOfOrder)%serialOrderGene.lengthOfSet;
 			this.biologicalClock = 0;
 		}
@@ -198,14 +201,7 @@ class agent{
 	void moveWithSerialOrder(){
 
 		if(g6dofs.length==0) return;
-
-		/*
-		writeln("wavelengthOfOrder.length:", this.SOG.wavelengthOfOrder.length, "\nsequenceOfOrder:", sequenceOfOrder, "\nbiologicalClock:", biologicalClock, "\nmoveSpan.length:", this.SOG.moveSpan.length);
-		writeln("moveSpan:", this.SOG.moveSpan);
-		writeln("wavelengthOfOrder:", this.SOG.wavelengthOfOrder);
-		*/
-
-		if(!this.SOG.wavelengthOfOrder[sequenceOfOrder][biologicalClock]) return;
+		//if(!this.SOG.wavelengthOfOrder[sequenceOfOrder][biologicalClock]) return;
 
 		foreach(string s, dof; g6dofs){
 
@@ -221,30 +217,11 @@ class agent{
 						*(SOG.tracks[sequenceOfOrder][s].z - currentAngle.z)
 						)
 					);
+
 		}
 
 	}
 
-
-	/+
-	void moveWithOsci(){
-
-		//oscilは現在角度から次の駆動力を決定する
-		if(g6dofs.length!=0) foreach(string s, dof; g6dofs){
-			gene.oscil.setTheta(s, dof.getAngle(0)); //thetaがx方向の関節移動
-			gene.oscil.setPhi(s, dof.getAngle(1)); //phiがz方向の関節移動
-		}
-
-		//theta, phiは角度ではなく，単に駆動力の度合いと考えてよい
-		float[string] deltaTheta = gene.oscil.calculateDeltaTheta();
-		float[string] deltaPhi = gene.oscil.calculateDeltaPhi();
-
-		//sinでdeltaTheta, deltaPhiを-1.0~1.0にリミットしている
-		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( Vector3f(
-					gene.maxelo[s].getx()*sin(deltaTheta[s]), gene.maxVelo[s].gety()*sin(deltaPhi[s]), 0.0f ) );
-
-	}
-	+/
 
 
 
