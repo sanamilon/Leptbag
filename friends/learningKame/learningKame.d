@@ -14,6 +14,7 @@ kame myKame;
 agentBodyParameter info;
 
 const float bodyMass = 5.0f;
+int wait = 200;
 
 class kame{
 
@@ -68,16 +69,40 @@ class kame{
 			g6dofs[s] = generic6DofConstraint_create(parts[bodyInfo.g6dofParams[s].object1Name], parts[bodyInfo.g6dofParams[s].object2Name],
 					bodyInfo.g6dofParams[s].object1Position, bodyInfo.g6dofParams[s].object2Position,
 					bodyInfo.g6dofParams[s].rotation);
-			g6dofs[s].setAngularLimit(zeroVec3, zeroVec3);
-			g6dofs[s].setLinearLimit (zeroVec3, zeroVec3);
+
+			switch(s){
+				case "Constraint.002", "Constraint.005", "Constraint.007", "Constraint.010":
+				g6dofs[s].setAngularLimit(bodyInfo.g6dofParams[s].angLimitLower, bodyInfo.g6dofParams[s].angLimitUpper);
+				g6dofs[s].setLinearLimit (bodyInfo.g6dofParams[s].linLimitLower, bodyInfo.g6dofParams[s].linLimitUpper);
+				g6dofs[s].setRotationalMotor(0);
+				g6dofs[s].setRotationalMotor(1);
+				g6dofs[s].setRotationalMotor(2);
+				g6dofs[s].setMaxRotationalMotorForce(0, 10000);
+				g6dofs[s].setMaxRotationalMotorForce(1, 10000);
+				g6dofs[s].setMaxRotationalMotorForce(2, 10000);
+				default:
+				g6dofs[s].setAngularLimit(zeroVec3, zeroVec3);
+				g6dofs[s].setLinearLimit (zeroVec3, zeroVec3);
+			}
+
 		}
 
 
 
 	}
 
-	void move(int sequence){
-
+	void move(){
+		if(wait-->0) return;
+		foreach(string s, param; bodyInfo.g6dofParams){
+			switch(s){
+				case "Constraint.002", "Constraint.005", "Constraint.007", "Constraint.010":
+					g6dofs[s].setMaxRotationalMotorForce(0, 10000);
+					g6dofs[s].setMaxRotationalMotorForce(1, 10000);
+					g6dofs[s].setMaxRotationalMotorForce(2, 10000);
+					g6dofs[s].setRotationalTargetVelocity(createVec3(0, 0, 100));
+				default:
+			}
+		}
 	}
 
 	void despawn(){
@@ -101,12 +126,12 @@ extern (C) void init(){
 	loadHinge(info.hingeParams);
 	loadG6dof(info.g6dofParams);
 
-	myKame = new kame(0, 1, -1, info);
+	myKame = new kame(0, 2, -1, info);
 }
 
 
 extern (C) void tick(){
-
+	myKame.move();
 }
 
 

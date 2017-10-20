@@ -98,6 +98,11 @@ void loadG6dof(ref g6dofParam[string] g6dofParams){
 			if(elem["objectType"].str == "genericConstraint"){
 
 				string name = elem["name"].str;
+                float ang_x_lo = 0.0, ang_y_lo = 0.0, ang_z_lo = 0.0;
+                float ang_x_up = 0.0, ang_y_up = 0.0, ang_z_up = 0.0;
+                float lin_x_lo = 0.0, lin_y_lo = 0.0, lin_z_lo = 0.0;
+                float lin_x_up = 0.0, lin_y_up = 0.0, lin_z_up = 0.0;
+
 				g6dofParams[name] = g6dofParam();
 
 				g6dofParams[name].name = name;
@@ -108,21 +113,37 @@ void loadG6dof(ref g6dofParam[string] g6dofParams){
 				g6dofParams[name].object2Name = elem["object2"].str;
 				g6dofParams[name].object1Position = createVec3(elem["object1xpos"].floating, elem["object1ypos"].floating, elem["object1zpos"].floating);
 				g6dofParams[name].object2Position = createVec3(elem["object2xpos"].floating, elem["object2ypos"].floating, elem["object2zpos"].floating);
-				if(elem["useXAngLimit"].str == "True") g6dofParams[name].useAngLimit[0]= true; else g6dofParams[name].useAngLimit[0] = false;
-				if(elem["useYAngLimit"].str == "True") g6dofParams[name].useAngLimit[1]= true; else g6dofParams[name].useAngLimit[1] = false;
-				if(elem["useZAngLimit"].str == "True") g6dofParams[name].useAngLimit[2]= true; else g6dofParams[name].useAngLimit[2] = false;
+				if(elem["useXAngLimit"].str == "True"){
+                    ang_x_lo = elem["xAngLimitLower"].floating;
+                    ang_x_up = elem["xAngLimitUpper"].floating;
+                }
+                if(elem["useYAngLimit"].str == "True"){
+                    ang_y_lo = elem["yAngLimitLower"].floating;
+                    ang_y_up = elem["yAngLimitUpper"].floating;
+                }
+                if(elem["useZAngLimit"].str == "True"){
+                    ang_z_lo = elem["zAngLimitLower"].floating;
+                    ang_z_up = elem["zAngLimitUpper"].floating;
+                }
 
-				g6dofParams[name].angLimitLower = createVec3(elem["xAngLimitLower"].floating, elem["yAngLimitLower"].floating, elem["zAngLimitLower"].floating);
-				g6dofParams[name].angLimitUpper = createVec3(elem["xAngLimitUpper"].floating, elem["yAngLimitUpper"].floating, elem["zAngLimitUpper"].floating);
+				g6dofParams[name].angLimitLower = createVec3(ang_x_lo, ang_y_lo, ang_z_lo);
+				g6dofParams[name].angLimitUpper = createVec3(ang_x_up, ang_y_up, ang_z_up);
 
-				if(elem["useXLinLimit"].str == "True") g6dofParams[name].useLinLimit[0]= true; else g6dofParams[name].useLinLimit[0] = false;
-				if(elem["useYAngLimit"].str == "True") g6dofParams[name].useLinLimit[1]= true; else g6dofParams[name].useLinLimit[1] = false;
-				if(elem["useZAngLimit"].str == "True") g6dofParams[name].useLinLimit[2]= true; else g6dofParams[name].useLinLimit[2] = false;
+                if(elem["useXLinLimit"].str == "True"){
+                    lin_x_lo = elem["xLinLimitLower"].floating;
+                    lin_x_up = elem["xLinLimitUpper"].floating;
+                }
+                if(elem["useYLinLimit"].str == "True"){
+                    lin_y_lo = elem["yLinLimitLower"].floating;
+                    lin_y_up = elem["yLinLimitUpper"].floating;
+                }
+                if(elem["useZLinLimit"].str == "True"){
+                    lin_z_lo = elem["zLinLimitLower"].floating;
+                    lin_z_up = elem["zLinLimitUpper"].floating;
+                }
 
-				g6dofParams[name].linLimitLower = createVec3(elem["xLinLimitLower"].floating, elem["yLinLimitLower"].floating, elem["zLinLimitLower"].floating);
-				g6dofParams[name].linLimitUpper = createVec3(elem["xLinLimitUpper"].floating, elem["yLinLimitUpper"].floating, elem["zLinLimitUpper"].floating);
-
-
+				g6dofParams[name].linLimitLower = createVec3(lin_x_lo, lin_y_lo, lin_z_lo);
+				g6dofParams[name].linLimitUpper = createVec3(lin_x_up, lin_y_up, lin_z_up);
 			}
 		}
 	}catch(Exception ex){
