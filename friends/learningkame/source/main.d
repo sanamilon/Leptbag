@@ -7,6 +7,8 @@ import std.algorithm;
 
 
 import japariSDK.japarilib;
+import dlib.math.vector;
+import dlib.math.quaternion;
 import params;
 import loadJson;
 
@@ -26,48 +28,30 @@ class kame{
 
 	this(float x, float y, float z, agentBodyParameter info){
 
-		spawn(createVec3(x, y, z), info);
+		spawn(Vector3f(x, y, z), info);
 
 	}
 
-	void spawn(vec3 position, agentBodyParameter info){
+	void spawn(Vector3f position, agentBodyParameter info){
 
 		this.bodyInfo = info;
 
 		foreach(string name, params;bodyInfo.partParams){
-				bodyInfo.partsGenerator[name] = new ElementManager(bodyInfo.partParams[name].vertices, &createConvexHullShapeBody);
+				bodyInfo.partsGenerator[name] = new elementManager(bodyInfo.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 
-		vec3 zeroVec3 = createVec3(0.0, 0.0, 0.0);
+		Vector3f zeroVec3 = Vector3f(0.0, 0.0, 0.0);
 
 
 		foreach(string s, partsGen; bodyInfo.partsGenerator){
 
-			parts[s] = partsGen.generate(paramWrap(
-				param("position", addVec(bodyInfo.partParams[s].position, position)),
+			parts[s] = partsGen.generate(parameterPack(
+				param("position", bodyInfo.partParams[s].position + position),
 				param("scale",    bodyInfo.partParams[s].scale),
 				param("rotation", bodyInfo.partParams[s].rotation),
 				param("model",    bodyInfo.partParams[s].vertices),
-				param("mass",
-				//0.0f)));
-				bodyInfo.partParams[s].mass * bodyMass)));
+				param("mass",     bodyInfo.partParams[s].mass * bodyMass)));
 
-			}
-
-		foreach(string s, param; bodyInfo.hingeParams){
-			hinges[s] = new hingeConstraint(
-				parts[bodyInfo.hingeParams[s].object1Name],
-				parts[bodyInfo.hingeParams[s].object2Name],
-				bodyInfo.hingeParams[s].object1Position,
-				bodyInfo.hingeParams[s].object2Position,
-				bodyInfo.hingeParams[s].axis1,
-				bodyInfo.hingeParams[s].axis2);
-
-			hinges[s].setLimit( bodyInfo.hingeParams[s].limitLower, bodyInfo.hingeParams[s].limitLower );
-			if( bodyInfo.hingeParams[s].enabled ){
-				hinges[s].enableMotor(true);
-				hinges[s].setMaxMotorImpulse(5);
-			}
 		}
 
 		foreach(string s, param; bodyInfo.g6dofParams){
@@ -107,7 +91,7 @@ class kame{
 					g6dofs[s].setMaxRotationalMotorForce(0, 10000);
 					g6dofs[s].setMaxRotationalMotorForce(1, 10000);
 					g6dofs[s].setMaxRotationalMotorForce(2, 10000);
-					g6dofs[s].setRotationalTargetVelocity(createVec3(0, 0, 100));
+					g6dofs[s].setRotationalTargetVelocity(Vector3f(0, 0, 100));
 				default:
 			}
 		}
@@ -131,7 +115,6 @@ extern (C) void init(){
 
 	//jsonからload
 	loadMesh(info.partParams);
-	loadHinge(info.hingeParams);
 	loadG6dof(info.g6dofParams);
 
 	myKame = new kame(0, 2, -1, info);

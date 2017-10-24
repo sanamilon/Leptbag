@@ -391,7 +391,7 @@ class hingeConstraint{
 		entity = createHingeConstraint(cubeA.entity, cubeB.entity, toVec3(positionA), toVec3(positionB), toVec3(axisA), toVec3(axisB));
 		exported = false;
 	}
-	
+
 
 	void enableMotor(bool flag){
 		entity.enableMotor(flag);
@@ -424,20 +424,78 @@ class hingeConstraint{
 extern (C++) {
 	interface generic6DofConstraint_interface{
 		float getAngle(int index);
-		void setAngularLimit(vec3 lower, vec3 upper);
-		void setLinearLimit(vec3 lower, vec3 upper);
+		void setAngularLimit(vec3_interface lower, vec3_interface upper);
+		void setLinearLimit(vec3_interface lower, vec3_interface upper);
 		void setRotationalMotor(int index);
 		void setLinearMotor(int index);
 		void setMaxRotationalMotorForce(int index, float force);
-		void setMaxLinearMotorForce(vec3 force);
-		void setRotationalTargetVelocity(vec3 velocity);
-		void setLinearTargetVelocity(vec3 velocity);
+		void setMaxLinearMotorForce(vec3_interface force);
+		void setRotationalTargetVelocity(vec3_interface velocity);
+		void setLinearTargetVelocity(vec3_interface velocity);
 		void destroy();
 	}
 }
 
-extern (C) generic6DofConstraint_interface createGeneric6DofConstraint(elementNode_interface elemA, elementNode_interface elemB, vec3 positionA, vec3 positionB, quat rotation);
 
+extern (C) generic6DofConstraint_interface createGeneric6DofConstraint(elementNode_interface elemA, elementNode_interface elemB, vec3_interface positionA, vec3_interface positionB, quat_interface rotation);
+
+class generic6DofConstraint{
+
+	generic6DofConstraint_interface entity;
+	bool exported;
+
+	this(elementNode cubeA, elementNode cubeB, Vector3f positionA, Vector3f positionB, Quaternionf rotation){
+		entity = createGeneric6DofConstraint(cubeA.entity, cubeB.entity, toVec3(positionA), toVec3(positionB), toQuat(rotation));
+		exported = false;
+	}
+
+	float getAngle(int index){
+		return entity.getAngle(index);
+	}
+
+	void setAngularLimit(Vector3f lower, Vector3f upper){
+		entity.setAngularLimit(toVec3(lower), toVec3(upper));
+	}
+
+	void setLinearLimit(Vector3f lower, Vector3f upper){
+		entity.setLinearLimit(toVec3(lower), toVec3(upper));
+	}
+
+	void setRotationalMotor(int index){
+		entity.setRotationalMotor(index);
+	}
+
+	void setLinearMotor(int index){
+		entity.setLinearMotor(index);
+	}
+
+	void setMaxRotationalMotorForce(int index, float force){
+		entity.setMaxRotationalMotorForce(index, force);
+	}
+
+	void setMaxLinearMotorForce(Vector3f force){
+		entity.setMaxLinearMotorForce(toVec3(force));
+	}
+
+	void setRotationalTargetVelocity(Vector3f velocity){
+		entity.setRotationalTargetVelocity(toVec3(velocity));
+	}
+
+	void setLinearTargetVelocity(Vector3f velocity){
+		entity.setLinearTargetVelocity(toVec3(velocity));
+	}
+
+	void destroy(){
+		entity.destroy();
+	}
+
+	~this(){
+		if(exported == false){
+			entity.destroy();
+		}
+	}
+
+}
 
 //-------------------------------------------------------------------------------------------------------
 
@@ -453,4 +511,3 @@ extern (C){
 	btRigidBody createPlaneBody(parameterPack input);
 	btRigidBody createConvexHullShapeBody(parameterPack input);
 }
-
