@@ -1,0 +1,21 @@
+{
+	"name": "learningkame",
+	"authors": [
+		"shikeee"
+	],
+	"description": "learning kame with action-predict network",
+	"copyright": "Copyright © 2017, shikeee",
+	"license": "proprietary",
+	"dependencies": {
+		"dlib": "~>0.11.1"
+	},
+
+	"sourcePaths": ["source/", "lib/"],
+	"importPaths": ["source/", "lib/"],
+	"targetType": "dynamicLibrary",
+	"dflags": ["-defaultlib=libphobos2.so", "-J."],
+	"lflags": ["-undefined", "dynamic_lookup"],
+	"postBuildCommands": ["./run.sh $$DUB_TARGET_NAME $$DUB_RUN"]
+
+
+}

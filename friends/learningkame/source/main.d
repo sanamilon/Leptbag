@@ -35,7 +35,7 @@ class kame{
 		this.bodyInfo = info;
 
 		foreach(string name, params;bodyInfo.partParams){
-				bodyInfo.partsGenerator[name] = createElementManager(bodyInfo.partParams[name].vertices, &createConvexHullShapeBody);
+				bodyInfo.partsGenerator[name] = new ElementManager(bodyInfo.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 
 		vec3 zeroVec3 = createVec3(0.0, 0.0, 0.0);
@@ -55,9 +55,14 @@ class kame{
 			}
 
 		foreach(string s, param; bodyInfo.hingeParams){
-			hinges[s] = hingeConstraint_create(parts[bodyInfo.hingeParams[s].object1Name], parts[bodyInfo.hingeParams[s].object2Name],
-					bodyInfo.hingeParams[s].object1Position, bodyInfo.hingeParams[s].object2Position,
-					bodyInfo.hingeParams[s].axis1, bodyInfo.hingeParams[s].axis2);
+			hinges[s] = new hingeConstraint(
+				parts[bodyInfo.hingeParams[s].object1Name],
+				parts[bodyInfo.hingeParams[s].object2Name],
+				bodyInfo.hingeParams[s].object1Position,
+				bodyInfo.hingeParams[s].object2Position,
+				bodyInfo.hingeParams[s].axis1,
+				bodyInfo.hingeParams[s].axis2);
+
 			hinges[s].setLimit( bodyInfo.hingeParams[s].limitLower, bodyInfo.hingeParams[s].limitLower );
 			if( bodyInfo.hingeParams[s].enabled ){
 				hinges[s].enableMotor(true);
@@ -66,9 +71,12 @@ class kame{
 		}
 
 		foreach(string s, param; bodyInfo.g6dofParams){
-			g6dofs[s] = generic6DofConstraint_create(parts[bodyInfo.g6dofParams[s].object1Name], parts[bodyInfo.g6dofParams[s].object2Name],
-					bodyInfo.g6dofParams[s].object1Position, bodyInfo.g6dofParams[s].object2Position,
-					bodyInfo.g6dofParams[s].rotation);
+			g6dofs[s] = new generic6DofConstraint(
+				parts[bodyInfo.g6dofParams[s].object1Name],
+				parts[bodyInfo.g6dofParams[s].object2Name],
+				bodyInfo.g6dofParams[s].object1Position,
+				bodyInfo.g6dofParams[s].object2Position,
+				bodyInfo.g6dofParams[s].rotation);
 
 			switch(s){
 				case "Constraint.002", "Constraint.005", "Constraint.007", "Constraint.010":
