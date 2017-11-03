@@ -25,6 +25,8 @@ class agent{
 	static agentBodyParameter bodyInformation;
 	static Vector3f scoreCoeff = Vector3f(-0.3f, 0.0f, -1.0f);
 	Vector3f initialPos;
+	const initialGravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+	const initialEyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
 	Vector3f gravityDirection;
 	Vector3f eyeDirection;
 	elementNode[string] parts;
@@ -64,11 +66,12 @@ class agent{
 	void spawn(Vector3f position, string measuredPart){
 
 		this.initialPos = position;
-		this.gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
-		this.eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+		this.gravityDirection = initialGravityDirection;
+		this.eyeDirection = initialEyeDirection;
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
+
 
 		//身体パーツ
 		foreach(string s, partsGen; agent.bodyInformation.partsGenerator){
@@ -79,7 +82,7 @@ class agent{
 						param("scale",    agent.bodyInformation.partParams[s].scale),
 						param("rotation", agent.bodyInformation.partParams[s].rotation),
 						param("model",    agent.bodyInformation.partParams[s].vertices),
-						param("mass",agent.bodyInformation.partParams[s].mass * bodyMass)
+						param("mass", agent.bodyInformation.partParams[s].mass * bodyMass)
 						)
 					);
 
@@ -154,6 +157,14 @@ class agent{
 			}
 		}
 
+
+		//somatosensory:体性感覚
+		void updateSomatoSensory(){
+			this.gravityDirection = this.parts["head"].getRotation().conjugate().rotate(this.initialGravityDirection).normalized();
+			this.eyeDirection = this.parts["head"].getRotation().rotate(this.initialEyeDirection).normalized();
+		}
+
+
 		bool hasSameTracks(agent u){
 			foreach(int i, c; this.SOG.tracks){
 				foreach(string s, r; c){
@@ -197,6 +208,39 @@ class agent{
 		}
 
 
+		void moveManually(int clock){
+
+			if(g6dofs.length==0) return;
+
+
+			foreach(string s, dof; g6dofs){
+
+				Vector3f currentAngle = Vector3f(dof.getAngle(0), dof.getAngle(1), dof.getAngle(2));
+				//writeln("currentAngle : ", currentAngle);
+				float goalAngle = -3.141592f + 3.141592f/2.0f*to!float((clock+2)%4);
+
+
+				Vector3f goal = Vector3f(goalAngle, 0.0f, 0.0f);
+				//writeln("goal : ", goal);
+				//writeln("\t",3.141592f/2.0f*to!float(clock) );
+				Vector3f maxVel = Vector3f(10.0f, 10.0f, 10.0f);
+
+				dof.setRotationalTargetVelocity(
+						Vector3f(
+							maxVel.x
+							*(goal.x - currentAngle.x),
+							maxVel.y
+							*(goal.y - currentAngle.y),
+							maxVel.z
+							*(goal.z - currentAngle.z)
+							)
+						);
+			}
+
+			this.updateSomatoSensory();
+
+		}
+
 		void moveWithSerialOrder(){
 
 			if(g6dofs.length==0) return;
@@ -204,6 +248,7 @@ class agent{
 
 			foreach(string s, dof; g6dofs){
 
+				//getAngle()は[-pi, pi]を返す
 				Vector3f currentAngle = Vector3f(dof.getAngle(0), dof.getAngle(1), dof.getAngle(2));
 
 				dof.setRotationalTargetVelocity(
@@ -217,6 +262,8 @@ class agent{
 							)
 						);
 			}
+
+			this.updateSomatoSensory();
 
 		}
 

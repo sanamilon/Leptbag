@@ -1,5 +1,6 @@
 module japariSDK.japarilib;
 import std.stdio;
+import std.math;
 
 import dlib.math.vector;
 import dlib.math.quaternion;
@@ -323,10 +324,14 @@ extern (C++){
 		float getXpos();
 		float getYpos();
 		float getZpos();
-		float getOrientationW();
-		float getOrientationX();
-		float getOrientationY();
-		float getOrientationZ();
+		float getRotationAngle();
+		float getRotationAxisX();
+		float getRotationAxisY();
+		float getRotationAxisZ();
+		float getRotationW();
+		float getRotationX();
+		float getRotationY();
+		float getRotationZ();
 		float getBasis(int row, int column);
 		float getFriction();
 		void setFriction(float coef);
@@ -348,12 +353,19 @@ class elementNode{
 		return Vector3f(entity.getXpos(), entity.getYpos(), entity.getZpos());
 	}
 
-	Quaternionf getOrientation(){
+	float getRotationAngle(){
+		return this.entity.getRotationAngle();
+	}
+
+
+
+	Quaternionf getRotation(){
+		float cosAngle = sin(this.entity.getRotationAngle());
 		return Quaternionf(
-				this.entity.getOrientationX(),
-				this.entity.getOrientationY(),
-				this.entity.getOrientationZ(),
-				this.entity.getOrientationW());
+				this.entity.getRotationX(),
+				this.entity.getRotationY(),
+				this.entity.getRotationZ(),
+				this.entity.getRotationW());
 	}
 
 	float getBasis(int row, int column){

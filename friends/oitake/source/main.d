@@ -17,7 +17,7 @@ import params;
 import loadJson;
 
 
-const int agentNum = 40;
+const int agentNum = 30;
 const int averageOf = 5; //一世代averageOf回の試行を行いその平均をスコアとする
 const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
@@ -47,6 +47,7 @@ extern (C) void init(){
 
 	//agents生成
 	agents.length = agentNum*averageOf;
+	agent.registerParameter(info);
 	prepareAgentsGroup(agents, info);
 	writeln("made main groups of ", averageOf, " (", agentNum, " agents in each group)");
 
@@ -59,7 +60,6 @@ extern (C) void init(){
 void prepareAgentsGroup(agent[] group, agentBodyParameter information){
 	//group.length = agentNum*averageOf;
 
-	agent.registerParameter(information);
 
 	for(int i=0; i<averageOf; i++){
 		for(int j=0; j<agentNum; j++){
@@ -86,9 +86,30 @@ const int trialSpan = 500; //一試行の長さ
 float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
 float coinForRandomMutation = 0.1f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
 
+int clock = 0;
 extern (C) void tick(){
 
+
 	time++;
+
+	/+
+	if(time%50==0){
+		if(!evaluation){
+			write(agents[0].parts["head"].getRotationAngle(), ", ");
+			write(agents[0].parts["head"].getRotation(), ", ");
+			write(agents[0].gravityDirection);
+			writeln(", ", agents[0].eyeDirection);
+		}else{
+			write(evaluateds[0].parts["head"].getRotationAngle(), ", ");
+			write(evaluateds[0].parts["head"].getRotation(), ", ");
+			write(evaluateds[0].parts["head"].getRotation().conjugate().rotate(evaluateds[0].initialGravityDirection).normalized());
+			writeln(", ", evaluateds[0].parts["head"].getRotation().rotate(evaluateds[0].initialEyeDirection).normalized());
+		}
+
+	}
+	+/
+
+
 
 	if(time%2==0){
 		//運動する
@@ -99,12 +120,7 @@ extern (C) void tick(){
 
 	if(time%12==0){
 		if(!evaluation){
-			agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
-			agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
-			write(agents[0].parts["head"].getOrientation().conjugate().rotate(agents[0].gravityDirection).normalized());
-			writeln(", ", agents[0].parts["head"].getOrientation().rotate(agents[0].eyeDirection).normalized());
-			agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
-			agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+
 		}
 		//運動する
 		moveAgents();
@@ -252,7 +268,7 @@ void terminateGeneration(){
 		Vector3f[] scores = agent.sumScoreOnIndividual(agents, agentNum, averageOf);
 
 		//agentsは一旦退場
-		foreach(int i, elem; agents){
+		foreach(int i,ref elem; agents){
 			elem.despawn();
 		}
 
@@ -263,12 +279,7 @@ void terminateGeneration(){
 
 			evaluateds.length = agentNum*averageOf;
 
-			for(int i=0; i<averageOf; i++){
-				for(int j=0; j<agentNum; j++){
-					evaluateds[j + i*agentNum]
-						= new agent(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace, measuredPart);
-				}
-			}
+			prepareAgentsGroup(evaluateds, info);
 
 			foreach(int i, ref elem; evaluateds){
 				elem.copyGene(agents[i]);
@@ -283,7 +294,7 @@ void terminateGeneration(){
 			for(int i=0; i<averageOf; i++){
 				for(int j=0; j<agentNum; j++){
 					evaluateds[j + i*agentNum].spawn(
-							Vector3f(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace), measuredPart);
+							Vector3f(to!float(j)*personalSpace, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
 				}
 			}
 
@@ -308,7 +319,7 @@ void terminateGeneration(){
 			for(int i=0; i<averageOf; i++){
 				for(int j=0; j<agentNum; j++){
 					agents[j + i*agentNum].spawn(
-							Vector3f(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace), measuredPart);
+							Vector3f(to!float(j)*personalSpace, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
 				}
 			}
 
