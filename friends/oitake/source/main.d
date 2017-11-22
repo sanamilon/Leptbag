@@ -17,8 +17,8 @@ import params;
 import loadJson;
 
 
-const int agentNum = 30;
-const int averageOf = 5; //一世代averageOf回の試行を行いその平均をスコアとする
+const int agentNum = 60;
+const int averageOf = 3; //一世代averageOf回の試行を行いその平均をスコアとする
 const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
 const string measuredPart = "head"; //この名前のパーツの移動距離を測る

@@ -15,22 +15,22 @@ elementNode::~elementNode(){
 float elementNode::getXpos() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-	return orient.getX();
+	btVector3 pos = transform.getOrigin();
+	return pos.getX();
 }
 
 float elementNode::getYpos() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-	return orient.getY();
+	btVector3 pos = transform.getOrigin();
+	return pos.getY();
 }
 
 float elementNode::getZpos() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-	return orient.getZ();
+	btVector3 pos = transform.getOrigin();
+	return pos.getZ();
 }
 
 float elementNode::getRotationAngle() const{
