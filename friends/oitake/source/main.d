@@ -281,8 +281,8 @@ void terminateGeneration(){
 			elem.despawn();
 		}
 
-		float[] value = culculateValue(scores);
-		int[] bests = chooseBest(value);
+		float[] value = agent.culculateValue(scores);
+		int[] bests = agent.chooseBest(value);
 
 		if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
 
@@ -317,9 +317,9 @@ void terminateGeneration(){
 
 		agent.shareGeneAmongGroup(evaluateds, agentNum, averageOf);
 
-		evaluation = true; //次は突然変異体評価フェイズ
+		evaluation = true; //次は突然変異体評価
 
-	}else{ //突然変異体を評価するフェイズ
+	}else{ //突然変異体を評価する
 
 		agent.evaluateEvolution(agents, evaluateds, agentNum, averageOf);
 
