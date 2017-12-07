@@ -174,6 +174,7 @@ void moveAgents(){
 //一試行が終わるたびに実行する処理
 void terminateTrial(){
 
+	Vector3f preTopScoreTmp = Vector3f(0.0f, 0.0f, 10000.0f);
 	float proScoreTmp = -1000.0f; //この世代の最高移動距離
 	float[] averageScore;
 	averageScore.length = averageOf;
@@ -188,10 +189,13 @@ void terminateTrial(){
 			agents[i].absScore(true, false, false);
 
 			proScoreTmp = max( -1.0*agents[i].score.z, proScoreTmp );
+			if(agents[i].score.z < preTopScoreTmp.z){
+				preTopScoreTmp = agents[i].score;
+			}
 
 		}
 
-		displayGenerationResult(agents, proScoreTmp);
+		displayGenerationResult(agents, preTopScoreTmp);
 
 	}else{ //突然変異体評価フェイズ
 
@@ -204,10 +208,13 @@ void terminateTrial(){
 			evaluateds[i].absScore(true, false, false);
 
 			proScoreTmp = max( -1.0*evaluateds[i].score.z, proScoreTmp );
+			if(evaluateds[i].score.z < preTopScoreTmp.z){
+				preTopScoreTmp = evaluateds[i].score;
+			}
 
 		}
 
-		displayGenerationResult(evaluateds, proScoreTmp);
+		displayGenerationResult(evaluateds, preTopScoreTmp);
 
 
 	}
@@ -219,17 +226,17 @@ void terminateTrial(){
 }
 
 //今世代の結果を表示
-void displayGenerationResult(agent[] group, float proscoretmp){
+void displayGenerationResult(agent[] group, Vector3f pretopscoretmp){
 
 	//今回の世代の最高記録
-	writeln("	top proceeding of this generation : ", proscoretmp);
+	writeln("	top proceeding of this generation : ", pretopscoretmp);
 
-	writeln("\taverage scores at each trial\n");
+	writeln("\taverage scores at each trial");
 	writeln("\t", culculateAverage(agents, agentNum, averageOf) );
 
 	//最高記録が出たら記録，表示
-	if(proscoretmp>topScore){
-		topScore = proscoretmp;
+	if(-1.0*pretopscoretmp.z>topScore){
+		topScore = -1.0*pretopscoretmp.z;
 		writeln("!	top proceeding ever! : ", topScore);
 	}
 
@@ -237,6 +244,8 @@ void displayGenerationResult(agent[] group, float proscoretmp){
 	for(int i=0; i<0; i++){
 		writeln("agents[", i, "].score.z : ", agents[i].score.z);
 	}
+
+	writeln();
 
 	/+
 	for(int i=0; i<averageOf; i++){
