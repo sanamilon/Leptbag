@@ -143,16 +143,27 @@ class dog{
 		hinge_body_legBackLeft.setAngularLimit(Vector3f(0, -PI/2, 0), Vector3f(0, PI/2, 0));
 		hinge_body_legBackRight.setAngularLimit(Vector3f(0, -PI/2, 0), Vector3f(0, PI/2, 0));
 		hinge_body_tail.setAngularLimit(Vector3f(0, -PI/3, 0), Vector3f(0, PI/3, 0));
-
-
-		hinge_body_legFrontLeft.setRotationalMotor(1);
-		hinge_body_legFrontLeft.setMaxRotationalMotorForce(1, 1);
-		hinge_body_legFrontRight.setRotationalMotor(1);
-		hinge_body_legFrontRight.setMaxRotationalMotorForce(1, 1);
-		hinge_body_legBackLeft.setRotationalMotor(1);
-		hinge_body_legBackLeft.setMaxRotationalMotorForce(1, 1);
-		hinge_body_legBackRight.setRotationalMotor(1);
-		hinge_body_legBackRight.setMaxRotationalMotorForce(1, 1);
+		
+		hinge_body_head.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_head_muzzle.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_earLeft_head.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_earRight_head.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_body_legFrontLeft.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_body_legFrontRight.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_body_legBackLeft.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_body_legBackRight.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		hinge_body_tail.setLinearLimit(Vector3f(0, 0, 0), Vector3f(0, 0, 0));
+		
+		for (int i = 0; i<3; i++) {
+			hinge_body_legFrontLeft.setRotationalMotor(i);
+			hinge_body_legFrontLeft.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legFrontRight.setRotationalMotor(i);
+			hinge_body_legFrontRight.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legBackLeft.setRotationalMotor(i);
+			hinge_body_legBackLeft.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legBackRight.setRotationalMotor(i);
+			hinge_body_legBackRight.setMaxRotationalMotorForce(i, 1);
+		}
 
 		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, 0, 0));
 		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, 0, 0));
