@@ -163,12 +163,26 @@ class dog{
 			hinge_body_legBackLeft.setMaxRotationalMotorForce(i, 1);
 			hinge_body_legBackRight.setRotationalMotor(i);
 			hinge_body_legBackRight.setMaxRotationalMotorForce(i, 1);
+			
+			hinge_body_legFrontLeft.setLinearMotor(i);
+			hinge_body_legFrontLeft.setMaxLinearMotorForce(Vector3f(0, 0, 0));
+			hinge_body_legFrontRight.setLinearMotor(i);
+			hinge_body_legFrontRight.setMaxLinearMotorForce(Vector3f(0, 0, 0));
+			hinge_body_legBackLeft.setLinearMotor(i);
+			hinge_body_legBackLeft.setMaxLinearMotorForce(Vector3f(0, 0, 0));
+			hinge_body_legBackRight.setLinearMotor(i);
+			hinge_body_legBackRight.setMaxLinearMotorForce(Vector3f(0, 0, 0));
 		}
 
 		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, 0, 0));
 		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, 0, 0));
 		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, 0, 0));
 		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, 0, 0));
+		
+		hinge_body_legFrontLeft.setLinearTargetVelocity(Vector3f(0, 0, 0));
+		hinge_body_legFrontRight.setLinearTargetVelocity(Vector3f(0, 0, 0));
+		hinge_body_legBackLeft.setLinearTargetVelocity(Vector3f(0, 0, 0));
+		hinge_body_legBackRight.setLinearTargetVelocity(Vector3f(0, 0, 0));
 	}
 
 	void move(int sequence){
