@@ -45,7 +45,6 @@ class dog{
 
 
 	this(float x, float y, float z, bool initialDNA) {
-
 		if(initialDNA == true){
 			for(int col = 0; col < dnacol; col++){
 				for(int row = 0; row < dnarow; row++){
@@ -156,13 +155,13 @@ class dog{
 		
 		for (int i = 0; i<3; i++) {
 			hinge_body_legFrontLeft.setRotationalMotor(i);
-			hinge_body_legFrontLeft.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legFrontLeft.setMaxRotationalMotorForce(i, 100);
 			hinge_body_legFrontRight.setRotationalMotor(i);
-			hinge_body_legFrontRight.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legFrontRight.setMaxRotationalMotorForce(i, 100);
 			hinge_body_legBackLeft.setRotationalMotor(i);
-			hinge_body_legBackLeft.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legBackLeft.setMaxRotationalMotorForce(i, 100);
 			hinge_body_legBackRight.setRotationalMotor(i);
-			hinge_body_legBackRight.setMaxRotationalMotorForce(i, 1);
+			hinge_body_legBackRight.setMaxRotationalMotorForce(i, 100);
 			
 			hinge_body_legFrontLeft.setLinearMotor(i);
 			hinge_body_legFrontLeft.setMaxLinearMotorForce(Vector3f(0, 0, 0));
@@ -192,10 +191,10 @@ class dog{
 		hinge_body_legBackLeft.setRotationalTargetVelocity(dna[sequence][2], 0.3);
 		hinge_body_legBackRight.setRotationalTargetVelocity(dna[sequence][3], 0.3);
 		*/
-		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, dna[sequence][0], 0));
-		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, dna[sequence][1], 0));
-		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, dna[sequence][2], 0));
-		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, dna[sequence][3], 0));
+		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][0]-hinge_body_legFrontLeft.getAngle(1))*2, 0));
+		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][1]-hinge_body_legFrontRight.getAngle(1))*2, 0));
+		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][2]-hinge_body_legBackLeft.getAngle(1))*2, 0));
+		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][3]-hinge_body_legBackRight.getAngle(1))*2, 0));
 	}
 
 
@@ -266,9 +265,13 @@ extern (C) void tick(){
 	if(time == 30 + generation*2){
 
 		foreach(ref elem; doglist){
+			/*
 			if(isNaN(elem.muzzle.getPos().x)){
 				writeln("nan...だと...");
 			}
+			*/
+			write(elem.muzzle.getPos().x);
+			write(",");
 		}
 		writeln();
 
