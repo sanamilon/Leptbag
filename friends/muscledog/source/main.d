@@ -265,18 +265,32 @@ extern (C) void tick(){
 	if(time == 30 + generation*2){
 
 		foreach(ref elem; doglist){
-			/*
+			
 			if(isNaN(elem.muzzle.getPos().x)){
 				writeln("nan...だと...");
 			}
-			*/
+			
+			/*
 			write(elem.muzzle.getPos().x);
 			write(",");
+			*/
 		}
 		writeln();
 
 		//成績順にソート
-		doglist.sort!("a.muzzle.getPos().x >= b.muzzle.getPos().x");
+		dog best = doglist[0];
+		dog second = doglist[1];
+		foreach(i; 0..numofdog-1){
+			foreach(j; 1..numofdog-i){
+				if(doglist[j].muzzle.getPos().x >= doglist[j-1].muzzle.getPos().x){
+					writeln(j);
+					dog temp = doglist[j];
+					doglist[j] = doglist[j-1];
+					doglist[j-1] = temp;
+				}
+			}
+		}
+		//doglist.sort!("a.muzzle.getPos().x >= b.muzzle.getPos().x");
 
 		//優秀なDNAをコピー
 		float[4][20] firstDNA = doglist[0].dna;
