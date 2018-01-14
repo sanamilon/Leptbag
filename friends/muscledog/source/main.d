@@ -317,17 +317,13 @@ class dog{
 		hinge_body_legFrontRight.setRotationalTargetVelocity(dna[sequence][1], 0.3);
 		hinge_body_legBackLeft.setRotationalTargetVelocity(dna[sequence][2], 0.3);
 		hinge_body_legBackRight.setRotationalTargetVelocity(dna[sequence][3], 0.3);
+		*/
 		
 		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][0]-hinge_body_legFrontLeft.getAngle(1))*2, 0));
 		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][1]-hinge_body_legFrontRight.getAngle(1))*2, 0));
 		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][2]-hinge_body_legBackLeft.getAngle(1))*2, 0));
 		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][3]-hinge_body_legBackRight.getAngle(1))*2, 0));
-		
-		*/
-		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[0].musculoskeletalModel(dna[sequence][0]))));
-		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[1].musculoskeletalModel(dna[sequence][1]))));
-		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[2].musculoskeletalModel(dna[sequence][2]))));
-		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[3].musculoskeletalModel(dna[sequence][3]))));
+
 	}
 
 
