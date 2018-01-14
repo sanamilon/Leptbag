@@ -1,8 +1,10 @@
 import core.stdc.stdio;
 import std.stdio;
+import core.time;
 import core.runtime;
 import std.random;
 import std.math;
+import std.datetime;
 import std.algorithm;
 import std.conv;
 import std.array;
@@ -11,16 +13,139 @@ import japariSDK.japarilib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 
+SysTime previousTime;
+bool timeFlag = true;
 dog[] doglist;
 Random rnd;
+int count = 0;
 
 const int numofdog = 100;
 const int dnacol = 20;
 const int dnarow = 4;
 
+struct muscle{
+	const float fCE_max = 1;
+	const float vCE_max = 1;
+	const float l_opt = 0.1;
+	const float w = 0.4 * 0.1;
+	const float K = 5.0;
+	const float N = 1.5;
+	const float c = log(0.05);
+	
+	float dt = 0.005;
+	
+	float fM = 0;
+	float act = 0;
+	float fCE = 0;
+	float fPE = 0;
+	float vCE = 0;
+	float lCE = 0.4;
+	
+	float musculoskeletalModel(float u){
+		// muscle actication dynamics
+		act = muscleActivationDynamics(act, u);
+		//writeln(act);
+		
+		// contraction dynamics
+		fM = muscleContractionDynamics(act);
+		
+		return fM;
+	}
+	
+	float fCE_func(float a, float l, float v){
+		return a*fCE_max*fL(l)*fV(v);
+	}
+	
+	float fL(float l){
+		return exp(c*pow(((l-l_opt)/(l_opt-w)),3));
+	}
+	
+	float fV(float v){
+		if(v < 0){
+			return (vCE_max - v)/(vCE_max + K*v);
+		} else {
+			return (N + (N-1)*((vCE_max + v)/7.56*K*v - vCE_max));
+		}
+	}
+	
+	float fV_reverse(float x){
+		if(x < 0){
+			return ((x-1)*vCE_max)/(x*K + 1);
+		} else {
+			return ((x-1)*vCE_max)/(7.56*K*(x-N)-N+1);
+		}
+	}
+	
+	float fPE_func(float l){
+		if(l < l_opt){
+			return fCE_max*pow(((l-l_opt)/l_opt*w), 2);
+		} else {
+			return 0;
+		}
+	}
+	
+	float muscleActivationDynamics(float a, float u){
+		/* ここでdtを算出する. この後の計算でも同じステップ内では同じdtを用いる.
+		if(timeFlag){
+			previousTime = Clock.currTime();
+			dt = 0;
+			timeFlag = false;
+		} else {
+			auto currentTime = Clock.currTime();
+			auto dur = currentTime - previousTime;
+			dt = dur.total!"usecs";
+			dt = dt / 1000;
+			previousTime = currentTime;
+		}
+		*/
+
+		return ((u - a)*dt + a);
+	}
+	
+	float muscleContractionDynamics(float a){
+		// fVの逆関数を用いてvCEを計算
+		if(fL(lCE) == 0){
+			vCE = fV_reverse(0);
+		}else{
+			vCE = fV_reverse(fCE/(a * fCE_max * fL(lCE)));
+		}
+		
+		// vCEを用いてlCEを計算
+		this.lCE -= vCE*dt;
+		
+		// fCEを計算
+		fCE = fCE_func(a, vCE, lCE);
+		
+		// fPEを計算
+		fPE = fPE_func(lCE);
+		
+		// ゲラゲラポ
+		return fCE + fPE;
+	}
+	
+	// update joint moments "&" TRANSFORM IT TO TARGET VELOCITY FOR BULLET PHYSICS
+	float updateJointMoments(float f, float m, float l, Vector3f p1, Vector3f p2, Vector3f j){
+		// 一様な棒回りの慣性モーメント
+		float i = m*pow(l,2);
+		Vector3f s = p1 - p2;
+		Vector3f tmp1 = p2 - j;
+		Vector3f tmp2 = s / s.length();
+		float r;
+		r= tmp1.x * tmp2.x + tmp1.y * tmp2.y + tmp1.z * tmp2.z;
+		float torque = f * abs(r);
+		
+		float a = torque / i;
+		return a * dt;
+	}
+	
+
+}
+
+
 class dog{
 
 	float[4][20] dna;
+	muscle[4] myMuscle;
 
 	elementNode chest;
 	elementNode head;
@@ -48,10 +173,12 @@ class dog{
 		if(initialDNA == true){
 			for(int col = 0; col < dnacol; col++){
 				for(int row = 0; row < dnarow; row++){
-					dna[col][row] = uniform(-PI/2, PI/2, rnd);
+					//dna[col][row] = uniform(-PI/2, PI/2, rnd);
+					dna[col][row] = uniform(-1.0, 1.0, rnd);
 				}
 			}
 		}
+		
 
 		spawn(x, y, z);
 	}
@@ -190,11 +317,17 @@ class dog{
 		hinge_body_legFrontRight.setRotationalTargetVelocity(dna[sequence][1], 0.3);
 		hinge_body_legBackLeft.setRotationalTargetVelocity(dna[sequence][2], 0.3);
 		hinge_body_legBackRight.setRotationalTargetVelocity(dna[sequence][3], 0.3);
-		*/
+		
 		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][0]-hinge_body_legFrontLeft.getAngle(1))*2, 0));
 		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][1]-hinge_body_legFrontRight.getAngle(1))*2, 0));
 		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][2]-hinge_body_legBackLeft.getAngle(1))*2, 0));
 		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][3]-hinge_body_legBackRight.getAngle(1))*2, 0));
+		
+		*/
+		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[0].musculoskeletalModel(dna[sequence][0]))));
+		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[1].musculoskeletalModel(dna[sequence][1]))));
+		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[2].musculoskeletalModel(dna[sequence][2]))));
+		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[3].musculoskeletalModel(dna[sequence][3]))));
 	}
 
 
@@ -247,9 +380,11 @@ int timerDivisor = 0;
 int time = 0;
 int generation = 0;
 int sequence = 0;
+int maxSequence = 20;
 
 extern (C) void tick(){
 	if(timerDivisor++ == 6){
+		
 		sequence = (sequence+1)%20;
 		timerDivisor = 0;
 
@@ -263,6 +398,7 @@ extern (C) void tick(){
 
 	//世代終わり
 	if(time == 30 + generation*2){
+		timeFlag = true;
 
 		foreach(ref elem; doglist){
 			
@@ -278,12 +414,12 @@ extern (C) void tick(){
 		writeln();
 
 		//成績順にソート
+		
 		dog best = doglist[0];
 		dog second = doglist[1];
 		foreach(i; 0..numofdog-1){
 			foreach(j; 1..numofdog-i){
 				if(doglist[j].muzzle.getPos().x >= doglist[j-1].muzzle.getPos().x){
-					writeln(j);
 					dog temp = doglist[j];
 					doglist[j] = doglist[j-1];
 					doglist[j-1] = temp;
@@ -311,6 +447,8 @@ extern (C) void tick(){
 			elem.despawn();
 			elem = new dog(0, 1.5, -5*i, false);
 		}
+		
+		
 
 
 		//最初の2個体はさっきの優秀個体をそのまま動かす
@@ -332,7 +470,7 @@ extern (C) void tick(){
 			int numOfAttack = uniform(0, 10, rnd);
 				
 			for(int j = 0; j < numOfAttack; j++){
-				doglist[i].dna[uniform(0, dnacol, rnd)][uniform(0, dnarow, rnd)] = uniform(-PI/2, PI/2, rnd);
+				doglist[i].dna[uniform(0, dnacol, rnd)][uniform(0, dnarow, rnd)] = uniform(-1.0, 1.0, rnd);
 			}
 
 		}
