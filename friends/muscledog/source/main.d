@@ -32,7 +32,17 @@ struct muscle{
 	const float N = 1.5;
 	const float c = log(0.05);
 	
-	float dt = 0.005;
+	elementNode elemA;
+	elementNode elemB;
+	
+	Vector3f posInA = Vector3f(0, 0, 0);
+	Vector3f posInB = Vector3f(0, 0, 0);
+	Vector3f jointInA = Vector3f(0, 0, 0);
+	
+	float massOfArm = 0;
+	float lengthOfArm = 0;
+	
+	float dt = 0.05;
 	
 	float fM = 0;
 	float act = 0;
@@ -41,15 +51,27 @@ struct muscle{
 	float vCE = 0;
 	float lCE = 0.4;
 	
+	void setParams(elementNode eA, elementNode eB, Vector3f pA, Vector3f pB, Vector3f jA, float m, float l){
+		elemA = eA;
+		elemB = eB;
+		posInA = pA;
+		posInB = pB;
+		jointInA = jA;
+		massOfArm = m;
+		lengthOfArm = l;
+	}
+	
 	float musculoskeletalModel(float u){
 		// muscle actication dynamics
-		act = muscleActivationDynamics(act, u);
+		act = muscleActivationDynamics(u);
 		//writeln(act);
 		
 		// contraction dynamics
 		fM = muscleContractionDynamics(act);
 		
-		return fM;
+		float targetVelocity = updateJointMoments();
+		// writeln(targetVelocity);
+		return targetVelocity;
 	}
 	
 	float fCE_func(float a, float l, float v){
@@ -84,7 +106,7 @@ struct muscle{
 		}
 	}
 	
-	float muscleActivationDynamics(float a, float u){
+	float muscleActivationDynamics(float u){
 		/* ここでdtを算出する. この後の計算でも同じステップ内では同じdtを用いる.
 		if(timeFlag){
 			previousTime = Clock.currTime();
@@ -99,7 +121,7 @@ struct muscle{
 		}
 		*/
 
-		return ((u - a)*dt + a);
+		return ((u - act)*dt + act);
 	}
 	
 	float muscleContractionDynamics(float a){
@@ -124,17 +146,25 @@ struct muscle{
 	}
 	
 	// update joint moments "&" TRANSFORM IT TO TARGET VELOCITY FOR BULLET PHYSICS
-	float updateJointMoments(float f, float m, float l, Vector3f p1, Vector3f p2, Vector3f j){
+	float updateJointMoments(){
 		// 一様な棒回りの慣性モーメント
-		float i = m*pow(l,2);
-		Vector3f s = p1 - p2;
-		Vector3f tmp1 = p2 - j;
+		float i = massOfArm*pow(lengthOfArm,2);
+		Vector3f s = (elemB.getPos() + posInB) - (elemA.getPos() + posInA);
+		Vector3f tmp1 = posInA - jointInA;
 		Vector3f tmp2 = s / s.length();
-		float r;
-		r= tmp1.x * tmp2.x + tmp1.y * tmp2.y + tmp1.z * tmp2.z;
-		float torque = f * abs(r);
+		Vector3f r;
+		r = Vector3f(tmp1.y*tmp2.z - tmp1.z*tmp2.y, tmp1.z*tmp2.x - tmp1.x,tmp2.z, tmp1.x*tmp2.y - tmp1.y*tmp2.x);
+		float torque;
+		
+		// なぜかここy, しかもy>0なんだよなぁ、不思議すぎる
+		if(r.y > 0){
+			torque = -fM * r.length();
+		} else {
+			torque = fM * r.length();
+		}
 		
 		float a = torque / i;
+		// target velocity = a * dt
 		return a * dt;
 	}
 	
@@ -174,7 +204,7 @@ class dog{
 			for(int col = 0; col < dnacol; col++){
 				for(int row = 0; row < dnarow; row++){
 					//dna[col][row] = uniform(-PI/2, PI/2, rnd);
-					dna[col][row] = uniform(-1.0, 1.0, rnd);
+					dna[col][row] = uniform(0, 1.0, rnd);
 				}
 			}
 		}
@@ -248,6 +278,12 @@ class dog{
 					param("scale", Vector3f(0.5, 0.1, 0.1)),
 					param("rotation", Quaternionf(0, 0, 0, 1)),
 					param("mass", 0.2f)));
+					
+		
+		myMuscle[0].setParams(chest, legFrontLeft,  Vector3f( 0.4, -0.5, -0.4), Vector3f(-0.1, -0.5, 0), Vector3f( 0.5, -0.5, -0.4), 0.4, 1.0);
+		myMuscle[1].setParams(chest, legFrontRight, Vector3f( 0.4, -0.5,  0.4), Vector3f(-0.1, -0.5, 0), Vector3f( 0.5, -0.5,  0.4), 0.4, 1.0);
+		myMuscle[2].setParams(chest, legBackLeft,   Vector3f(-0.6, -0.5, -0.4), Vector3f(-0.1, -0.5, 0), Vector3f(-0.5, -0.5, -0.4), 0.4, 1.0);
+		myMuscle[3].setParams(chest, legBackRight,  Vector3f(-0.6, -0.5,  0.4), Vector3f(-0.1, -0.5, 0), Vector3f(-0.5, -0.5,  0.4), 0.4, 1.0);
 
 
 		hinge_body_head			= new generic6DofConstraint(chest   , head         , Vector3f(   1,    0,    0), Vector3f(-0.4,   0,    0), Quaternionf(0, 0, 0, 1));
@@ -470,7 +506,7 @@ extern (C) void tick(){
 			int numOfAttack = uniform(0, 10, rnd);
 				
 			for(int j = 0; j < numOfAttack; j++){
-				doglist[i].dna[uniform(0, dnacol, rnd)][uniform(0, dnarow, rnd)] = uniform(-1.0, 1.0, rnd);
+				doglist[i].dna[uniform(0, dnacol, rnd)][uniform(0, dnarow, rnd)] = uniform(0, 1.0, rnd);
 			}
 
 		}
