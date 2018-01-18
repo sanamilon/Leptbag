@@ -19,10 +19,10 @@ dog[] doglist;
 Random rnd;
 int count = 0;
 
-const int numofdog = 100;
+const int numofdog = 2;
 const int dnacol = 20;
 const int dnarow = 8;
-
+/*
 struct neural_net{
 	int in_num = 3;
 	int m1_num = 4;
@@ -48,6 +48,7 @@ struct neural_net{
 		}
 	}
 }
+*/
 
 struct muscle{
 	const float fCE_max = 1000;
@@ -85,7 +86,7 @@ struct muscle{
 		jointInA = jA;
 		massOfArm = m;
 		lengthOfArm = l;
-	}
+	}	
 	
 	float musculoskeletalModel(float u){
 		// muscle actication dynamics
@@ -103,7 +104,7 @@ struct muscle{
 	}
 	
 	float fCE_func(float a, float l, float v){
-		if(posInA == Vector3f(0.4, -0.5, -0.4)) writeln(fCE, ", a = ", a, ", fL(l) = ", fL(l), ", fV(v) = ", fV(v));
+		//if(posInA == Vector3f(0.4, -0.5, -0.4)) writeln(fCE, ", a = ", a, ", fL(l) = ", fL(l), ", fV(v) = ", fV(v));
 		return a*fCE_max*fL(l)*fV(v);
 	}
 	
@@ -209,6 +210,14 @@ struct muscle{
 class dog{
 
 	float[8][20] dna;
+	float[5][5] w12;
+	float[6] w23;
+	
+	float b1 = 0.1;
+	float b2 = 0.1;
+	
+	float[8] u;
+	
 	muscle[8] myMuscle;
 
 	elementNode chest;
@@ -243,9 +252,60 @@ class dog{
 			}
 		}
 		
+		for(int col = 0; col < 5; col++){
+			for(int row = 0; row < 5; row++){
+				//dna[col][row] = uniform(-PI/2, PI/2, rnd);
+				w12[col][row] = uniform(0.0, 0.3, rnd);
+			}
+		}
+		
+		for(int col = 0; col < 6; col++){
+			w23[col] = uniform(0.0, 0.3, rnd);
+		}
+		
+		for(int col = 0; col < 8; col++){
+			u[col] = uniform(0.0, 1.0, rnd);
+		}
 
 		spawn(x, y, z);
 	}
+	
+	
+	float trynet(float[4] inputs){
+			
+			//中間層計算
+			float[5] a = [0,0,0,0,0];
+			for(int i = 0; i < 5 ; i++) {
+				for(int j = 0; j < 5; j++){
+					if(j == 0){
+						a[i] += b1;
+					} else {
+						a[i] += inputs[j-1] * w12[i][j];
+					}
+				}
+			}
+			
+			//出力層計算
+			float o = 0;
+			for(int i = 0; i < 6 ; i++) {
+				if(i == 0){
+					o += b2;
+				} else {
+					o += a[i-1] * w23[i];
+				}
+			}
+			
+			//活性化関数
+			if(o > 1){
+				return 1;
+			} else if(o < 0){
+				return 0;
+			} else {
+				return o;
+			}
+
+		}
+		
 
 
 
@@ -399,10 +459,23 @@ class dog{
 		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][3]-hinge_body_legBackRight.getAngle(1))*2, 0));
 		
 		*/
-		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[0].musculoskeletalModel(dna[sequence][0]) + myMuscle[4].musculoskeletalModel(dna[sequence][4])  - hinge_body_legFrontLeft.getAngle(1)*0), 0));
-		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[1].musculoskeletalModel(dna[sequence][1]) + myMuscle[5].musculoskeletalModel(dna[sequence][5]) - hinge_body_legFrontRight.getAngle(1)*0), 0));
-		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[2].musculoskeletalModel(dna[sequence][2]) + myMuscle[6].musculoskeletalModel(dna[sequence][6])   - hinge_body_legBackLeft.getAngle(1)*0), 0));
-		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[3].musculoskeletalModel(dna[sequence][3]) + myMuscle[7].musculoskeletalModel(dna[sequence][7])  - hinge_body_legBackRight.getAngle(1)*0), 0));
+		
+		
+		u[0] = trynet([u[0], u[4], hinge_body_legFrontLeft.getAngle(1), 1]);
+		u[1] = trynet([u[1], u[5], hinge_body_legFrontRight.getAngle(1), 1]);
+		u[2] = trynet([u[2], u[6], hinge_body_legBackLeft.getAngle(1), 1]);
+		u[3] = trynet([u[3], u[7], hinge_body_legBackRight.getAngle(1), 1]);
+		u[4] = trynet([u[4], u[0], hinge_body_legFrontLeft.getAngle(1), 1]);
+		u[5] = trynet([u[5], u[1], hinge_body_legFrontRight.getAngle(1), 1]);
+		u[6] = trynet([u[6], u[2], hinge_body_legBackLeft.getAngle(1), 1]);
+		u[7] = trynet([u[7], u[3], hinge_body_legBackRight.getAngle(1), 1]);
+		
+		for(int i=0; i<8; i++) writeln(u[i]);
+		
+		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[0].musculoskeletalModel(u[0]) + myMuscle[4].musculoskeletalModel(u[4])  - hinge_body_legFrontLeft.getAngle(1)*0), 0));
+		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[1].musculoskeletalModel(u[1]) + myMuscle[5].musculoskeletalModel(u[5]) - hinge_body_legFrontRight.getAngle(1)*0), 0));
+		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[2].musculoskeletalModel(u[2]) + myMuscle[6].musculoskeletalModel(u[6])   - hinge_body_legBackLeft.getAngle(1)*0), 0));
+		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[3].musculoskeletalModel(u[3]) + myMuscle[7].musculoskeletalModel(u[7])  - hinge_body_legBackRight.getAngle(1)*0), 0));
 	}
 
 
