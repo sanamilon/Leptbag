@@ -21,13 +21,39 @@ int count = 0;
 
 const int numofdog = 100;
 const int dnacol = 20;
-const int dnarow = 4;
+const int dnarow = 8;
+
+struct neural_net{
+	int in_num = 3;
+	int m1_num = 4;
+	int out_num = 1;
+	
+	float[4][4] w12;
+	float[5][1] w23;
+	
+	float b1;
+	float b2;
+	
+	void init(){
+		for(int col = 0; col < in_num+1; col++){
+			for(int row = 0; row < m1_num; row++){
+				w12[col][row] = uniform(0.0, 1.0, rnd);
+			}
+		}
+		
+		for(int col = 0; col < m1_num+1; col++){
+			for(int row = 0; row < out_num; row++){
+				w23[col][row] = uniform(0.0, 1.0, rnd);
+			}
+		}
+	}
+}
 
 struct muscle{
-	const float fCE_max = 1;
-	const float vCE_max = 1;
-	const float l_opt = 0.1;
-	const float w = 0.4 * 0.1;
+	const float fCE_max = 1000;
+	const float vCE_max = 0.1;
+	const float l_opt = 0.3;
+	const float w = 0.4 * 0.2;
 	const float K = 5.0;
 	const float N = 1.5;
 	const float c = log(0.05);
@@ -64,38 +90,46 @@ struct muscle{
 	float musculoskeletalModel(float u){
 		// muscle actication dynamics
 		act = muscleActivationDynamics(u);
-		//writeln(act);
+		//if(posInA == Vector3f(0.4, -0.5, -0.4)) writeln(act);
 		
 		// contraction dynamics
 		fM = muscleContractionDynamics(act);
+		//if(posInA == Vector3f(0.4, -0.5, -0.4)) writeln(vCE);
+		//if(posInA == Vector3f(0.4, -0.5, -0.4)) writeln(fCE);
 		
 		float targetVelocity = updateJointMoments();
-		// writeln(targetVelocity);
+		//writeln(posInA, ", ", targetVelocity);
 		return targetVelocity;
 	}
 	
 	float fCE_func(float a, float l, float v){
+		if(posInA == Vector3f(0.4, -0.5, -0.4)) writeln(fCE, ", a = ", a, ", fL(l) = ", fL(l), ", fV(v) = ", fV(v));
 		return a*fCE_max*fL(l)*fV(v);
 	}
 	
 	float fL(float l){
-		return exp(c*pow(((l-l_opt)/(l_opt-w)),3));
+		float wow = exp(c*abs(pow(((l-l_opt)/(l_opt-w)),3)));
+		return wow;
 	}
 	
 	float fV(float v){
+		float wow;
 		if(v < 0){
-			return (vCE_max - v)/(vCE_max + K*v);
+			wow = ((vCE_max - v)/(vCE_max + K*v));
 		} else {
-			return (N + (N-1)*((vCE_max + v)/7.56*K*v - vCE_max));
+			wow = (N + (N-1)*((vCE_max + v)/7.56*K*v - vCE_max));
 		}
+		return wow;
 	}
 	
 	float fV_reverse(float x){
+		float r;
 		if(x < 0){
-			return ((x-1)*vCE_max)/(x*K + 1);
+			r = ((x-1)*vCE_max)/(x*K + 1);
 		} else {
-			return ((x-1)*vCE_max)/(7.56*K*(x-N)-N+1);
+			r = ((x-1)*vCE_max)/(7.56*K*(x-N)-N+1);
 		}
+		return r;
 	}
 	
 	float fPE_func(float l){
@@ -136,7 +170,7 @@ struct muscle{
 		this.lCE -= vCE*dt;
 		
 		// fCEを計算
-		fCE = fCE_func(a, vCE, lCE);
+		fCE = fCE_func(a, lCE, vCE);
 		
 		// fPEを計算
 		fPE = fPE_func(lCE);
@@ -174,8 +208,8 @@ struct muscle{
 
 class dog{
 
-	float[4][20] dna;
-	muscle[4] myMuscle;
+	float[8][20] dna;
+	muscle[8] myMuscle;
 
 	elementNode chest;
 	elementNode head;
@@ -204,7 +238,7 @@ class dog{
 			for(int col = 0; col < dnacol; col++){
 				for(int row = 0; row < dnarow; row++){
 					//dna[col][row] = uniform(-PI/2, PI/2, rnd);
-					dna[col][row] = uniform(0, 1.0, rnd);
+					dna[col][row] = uniform(0.0, 1.0, rnd);
 				}
 			}
 		}
@@ -284,6 +318,11 @@ class dog{
 		myMuscle[1].setParams(chest, legFrontRight, Vector3f( 0.4, -0.5,  0.4), Vector3f(-0.1, -0.5, 0), Vector3f( 0.5, -0.5,  0.4), 0.4, 1.0);
 		myMuscle[2].setParams(chest, legBackLeft,   Vector3f(-0.6, -0.5, -0.4), Vector3f(-0.1, -0.5, 0), Vector3f(-0.5, -0.5, -0.4), 0.4, 1.0);
 		myMuscle[3].setParams(chest, legBackRight,  Vector3f(-0.6, -0.5,  0.4), Vector3f(-0.1, -0.5, 0), Vector3f(-0.5, -0.5,  0.4), 0.4, 1.0);
+		
+		myMuscle[4].setParams(chest, legFrontLeft,  Vector3f( 0.6, -0.5, -0.4), Vector3f( 0.1, -0.5, 0), Vector3f( 0.5, -0.5, -0.4), 0.4, 1.0);
+		myMuscle[5].setParams(chest, legFrontRight, Vector3f( 0.6, -0.5,  0.4), Vector3f( 0.1, -0.5, 0), Vector3f( 0.5, -0.5,  0.4), 0.4, 1.0);
+		myMuscle[6].setParams(chest, legBackLeft,   Vector3f(-0.4, -0.5, -0.4), Vector3f( 0.1, -0.5, 0), Vector3f(-0.5, -0.5, -0.4), 0.4, 1.0);
+		myMuscle[7].setParams(chest, legBackRight,  Vector3f(-0.4, -0.5,  0.4), Vector3f( 0.1, -0.5, 0), Vector3f(-0.5, -0.5,  0.4), 0.4, 1.0);
 
 
 		hinge_body_head			= new generic6DofConstraint(chest   , head         , Vector3f(   1,    0,    0), Vector3f(-0.4,   0,    0), Quaternionf(0, 0, 0, 1));
@@ -360,10 +399,10 @@ class dog{
 		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (dna[sequence][3]-hinge_body_legBackRight.getAngle(1))*2, 0));
 		
 		*/
-		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[0].musculoskeletalModel(dna[sequence][0]))));
-		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[1].musculoskeletalModel(dna[sequence][1]))));
-		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[2].musculoskeletalModel(dna[sequence][2]))));
-		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[3].musculoskeletalModel(dna[sequence][3]))));
+		hinge_body_legFrontLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[0].musculoskeletalModel(dna[sequence][0]) + myMuscle[4].musculoskeletalModel(dna[sequence][4])  - hinge_body_legFrontLeft.getAngle(1)*0), 0));
+		hinge_body_legFrontRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[1].musculoskeletalModel(dna[sequence][1]) + myMuscle[5].musculoskeletalModel(dna[sequence][5]) - hinge_body_legFrontRight.getAngle(1)*0), 0));
+		hinge_body_legBackLeft.setRotationalTargetVelocity(Vector3f(0, (myMuscle[2].musculoskeletalModel(dna[sequence][2]) + myMuscle[6].musculoskeletalModel(dna[sequence][6])   - hinge_body_legBackLeft.getAngle(1)*0), 0));
+		hinge_body_legBackRight.setRotationalTargetVelocity(Vector3f(0, (myMuscle[3].musculoskeletalModel(dna[sequence][3]) + myMuscle[7].musculoskeletalModel(dna[sequence][7])  - hinge_body_legBackRight.getAngle(1)*0), 0));
 	}
 
 
@@ -465,15 +504,16 @@ extern (C) void tick(){
 		//doglist.sort!("a.muzzle.getPos().x >= b.muzzle.getPos().x");
 
 		//優秀なDNAをコピー
-		float[4][20] firstDNA = doglist[0].dna;
-		float[4][20] secondDNA = doglist[1].dna;
+		float[8][20] firstDNA = doglist[0].dna;
+		float[8][20] secondDNA = doglist[1].dna;
+		
 
 		//新記録を更新したDNAを表示
 		if(topRecord < doglist[0].muzzle.getPos().x){
 			topRecord = doglist[0].muzzle.getPos().x;
 			writeln("New Record!: " ~ to!string(topRecord));
 			writeln("dna:");
-			foreach(float[4] elem; doglist[0].dna){
+			foreach(float[8] elem; doglist[0].dna){
 				writeln(to!string(elem[0]) ~ ", " ~ to!string(elem[1]) ~ ", " ~ to!string(elem[2]) ~ ", " ~ to!string(elem[3]));
 			}
 		}
@@ -506,7 +546,7 @@ extern (C) void tick(){
 			int numOfAttack = uniform(0, 10, rnd);
 				
 			for(int j = 0; j < numOfAttack; j++){
-				doglist[i].dna[uniform(0, dnacol, rnd)][uniform(0, dnarow, rnd)] = uniform(0, 1.0, rnd);
+				doglist[i].dna[uniform(0, dnacol, rnd)][uniform(0, dnarow, rnd)] = uniform(0.0, 1.0, rnd);
 			}
 
 		}
