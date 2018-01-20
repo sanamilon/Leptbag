@@ -74,7 +74,7 @@ struct g6dofParam{
 //遺伝させるパラメータ
 struct serialOrderGene{
 
-	static uint lengthOfSet = 6;
+	static uint lengthOfSet = 8;
 	Vector3f[string][] tracks;
 	bool[][] wavelengthOfOrder;
 	int[] moveSpan;
@@ -164,6 +164,7 @@ struct serialOrderGene{
 		}
 
 	}
+
 
 	void init(int i, string s, Vector3f lowerLimit, Vector3f upperLimit){
 		auto rnd = Random(unpredictableSeed);

@@ -189,6 +189,7 @@ void terminateTrial(){
 			agents[i].absScore(true, false, false);
 
 			proScoreTmp = max( -1.0*agents[i].score.z, proScoreTmp );
+
 			if(agents[i].score.z < preTopScoreTmp.z){
 				preTopScoreTmp = agents[i].score;
 			}
@@ -208,6 +209,7 @@ void terminateTrial(){
 			evaluateds[i].absScore(true, false, false);
 
 			proScoreTmp = max( -1.0*evaluateds[i].score.z, proScoreTmp );
+
 			if(evaluateds[i].score.z < preTopScoreTmp.z){
 				preTopScoreTmp = evaluateds[i].score;
 			}
@@ -281,7 +283,7 @@ void terminateGeneration(){
 			elem.despawn();
 		}
 
-		float[] value = agent.culculateValue(scores);
+		float[] value = agent.culculateValueOnProceed(scores);
 		int[] bests = agent.chooseBest(value);
 
 		if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
@@ -303,7 +305,7 @@ void terminateGeneration(){
 			for(int i=0; i<averageOf; i++){
 				for(int j=0; j<agentNum; j++){
 					evaluateds[j + i*agentNum].spawn(
-							Vector3f(to!float(j)*personalSpace, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
+							Vector3f(to!float(j)*personalSpace + to!float(i)*0.001f, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
 				}
 			}
 
@@ -321,14 +323,14 @@ void terminateGeneration(){
 
 	}else{ //突然変異体を評価する
 
-		agent.evaluateEvolution(agents, evaluateds, agentNum, averageOf);
+		agent.evaluateEvolutionOnProceed(agents, evaluateds, agentNum, averageOf);
 
 		//突然変異体は一旦退場
 		foreach(int i, ref elem; evaluateds) elem.despawn();
 			for(int i=0; i<averageOf; i++){
 				for(int j=0; j<agentNum; j++){
 					agents[j + i*agentNum].spawn(
-							Vector3f(to!float(j)*personalSpace, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
+							Vector3f(to!float(j)*personalSpace + to!float(i)*0.001f, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
 				}
 			}
 

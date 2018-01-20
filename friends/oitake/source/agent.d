@@ -40,12 +40,15 @@ class agent{
 	static void registerParameter(agentBodyParameter info);
 	static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf);
 	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf);
-	static float[] culculateValue(Vector3f scores);
+	static float[] culculateValueOnProceed(Vector3f scores);
+	static float[] culculateValueOnTurnaround(Vector3f scores);
 	static void resetAllScores(agent[] agents);
 	static void shareGeneAmongGroup(agent[] agents, int agentNum, int averageOf);
-	static void evaluationOfEvolution(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
+	static void evaluateEvolutionOnProceed(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
+	static void evaluateEvolutionOnTurnaround(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void sortAgentsOnScore(agent[] agents);
 	static void swapTracks(agent one, agent two);
+
 	static void swapScores(agent one, agent two);
 
 
@@ -93,6 +96,7 @@ class agent{
 		//6Dof
 		foreach(string s, param; agent.bodyInformation.g6dofParams){
 			if(agent.bodyInformation.g6dofParams[s].enabled){
+
 				g6dofs[s] = new generic6DofConstraint(
 						parts[agent.bodyInformation.g6dofParams[s].object1Name],
 						parts[agent.bodyInformation.g6dofParams[s].object2Name],
@@ -105,6 +109,7 @@ class agent{
 					if(agent.bodyInformation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
 				}
 
+				//for debug
 				Vector3f zeroVector3f = Vector3f( 0.0, 0.0, 0.0 ); //セッターに同じVector3fを入れるとロック
 
 				//setting angular of g6dofs
@@ -134,8 +139,6 @@ class agent{
 
 				g6dofs[s].setMaxLinearMotorForce(Vector3f(0.0f, 0.0f, 0.0f));
 
-
-
 				}
 			}
 
@@ -158,11 +161,7 @@ class agent{
 		}
 
 
-		//somatosensory:体性感覚
-		void updateSomatoSensory(){
-			this.gravityDirection = this.parts["head"].getRotation().conjugate().rotate(this.initialGravityDirection).normalized();
-			this.eyeDirection = this.parts["head"].getRotation().rotate(this.initialEyeDirection).normalized();
-		}
+
 
 
 		bool hasSameTracks(agent u){
@@ -205,6 +204,12 @@ class agent{
 				this.biologicalClock = 0;
 			}
 			//}
+		}
+
+		//somatosensory:体性感覚
+		void updateSomatoSensory(){
+			this.gravityDirection = this.parts["head"].getRotation().conjugate().rotate(this.initialGravityDirection).normalized();
+			this.eyeDirection = this.parts["head"].getRotation().rotate(this.initialEyeDirection).normalized();
 		}
 
 
@@ -342,7 +347,7 @@ class agent{
 		return bests;
 	}
 
-	static float[] culculateValue(Vector3f[] scores){
+	static float[] culculateValueOnProceed(Vector3f[] scores){
 		float[] value;
 		value.length = scores.length;
 		value[] = 0.0f;
@@ -372,15 +377,15 @@ class agent{
 	}
 
 
-	static void evaluateEvolution(ref agent[] agents, ref agent[] evaluateds, int agentNum, int averageOf){
+	static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluateds, int agentNum, int averageOf){
 
 		float employmentRate = 0.0f; //突然変異個体採用率
 
 		Vector3f[] scoresMain = sumScoreOnIndividual(agents, agentNum, averageOf);
-		float[] valueMain = culculateValue(scoresMain);
+		float[] valueMain = culculateValueOnProceed(scoresMain);
 
 		Vector3f[] scoresEval = sumScoreOnIndividual(evaluateds, agentNum, averageOf);
-		float[] valueEval = culculateValue(scoresEval);
+		float[] valueEval = culculateValueOnProceed(scoresEval);
 
 		for(int i=0; i<agentNum; i++){
 
