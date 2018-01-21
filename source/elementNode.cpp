@@ -97,6 +97,7 @@ float elementNode::getRotationZ() const{
 	return orient.getZ();
 }
 
+
 float elementNode::getBasis(int row, int column) const {
 	btTransform transform;
 	//transform = body->getCenterOfMassTransform();
@@ -115,8 +116,15 @@ void elementNode::setFriction(float coef){
 	body->setFriction(coef);
 }
 
+void elementNode::setLinearVelocity(float x, float y, float z) {
+	body->setLinearVelocity(btVector3(x, y, z));
+}
+void elementNode::setAngularVelocity(float x, float y, float z) {
+	body->setAngularVelocity(btVector3(x, y, z));
+}
 
-void elementNode::loadMatrix(std::vector<glm::mat4> *input){
+
+void elementNode::loadMatrix(std::vector<glm::mat4> *input) {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
 
@@ -128,20 +136,24 @@ void elementNode::loadMatrix(std::vector<glm::mat4> *input){
 		* glm::scale(glm::mat4(1.0f), initialScale.toGlm());
 }
 
+void elementNode::activate() {
+	body->activate();
+}
 
-void elementNode::destroy(){
+
+void elementNode::destroy() {
 	parent->destroyElement(id);
 }
 
 
-btRigidBody* elementNode::getBody() const{
+btRigidBody* elementNode::getBody() const {
 	return body;
 }
 
-int elementNode::getID() const{
+int elementNode::getID() const {
 	return id;
 }
 
-void elementNode::changeID(int newID){
+void elementNode::changeID(int newID) {
 	id = newID;
 }

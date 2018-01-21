@@ -20,9 +20,13 @@ class elementNode_interface{
 	virtual float getRotationX() const = 0;
 	virtual float getRotationY() const = 0;
 	virtual float getRotationZ() const = 0;
+
 	virtual float getBasis(int row, int column) const = 0;
 	virtual float getFriction() const = 0;
 	virtual void setFriction(float coef) = 0;
+	virtual void setLinearVelocity(float x, float y, float z) = 0;
+	virtual void setAngularVelocity(float x, float y, float z) = 0;
+	virtual void activate() = 0;
 	virtual void destroy() = 0;
 };
 
@@ -53,6 +57,9 @@ class elementNode : public elementNode_interface{
 	virtual float getBasis(int row, int column) const;
 	virtual float getFriction() const;
 	virtual void setFriction(float coef);
+	virtual void setLinearVelocity(float x, float y, float z);
+	virtual void setAngularVelocity(float x, float y, float z);
+	virtual void activate();
 	virtual void destroy();
 
 	virtual~elementNode();
