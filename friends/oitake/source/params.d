@@ -70,6 +70,52 @@ struct g6dofParam{
 
 }
 
+struct phaseOscillatorGene{
+	static const int degreeOfFourier = 3;
+
+	const float limitOmega = 10.0f;
+	const float limitAlpha = 10.0f;
+	const float limitBeta = 10.0f;
+
+
+	float[string] omega;
+	float[][string][string] alpha;
+	float[][string][string] beta;
+
+	void initOmega(string jointName){
+		auto rnd = Random(unpredictableSeed);
+		omega[jointName] = uniform(0.0f, limitOmega, rnd);
+	}
+
+	void initAlphaBeta(string jointName1, string jointName2){
+		auto rnd = Random(unpredictableSeed);
+		if(jointName1!=jointName2){
+			alpha[jointName1][jointName2].length = degreeOfFourier;
+			beta[jointName1][jointName2].length = degreeOfFourier;
+			for(uint d=0; d<degreeOfFourier; d++){
+				alpha[jointName1][jointName2][d] = uniform(-1.0f * limitAlpha, limitAlpha, rnd);
+				beta[jointName1][jointName2][d] = uniform(-1.0f * limitBeta, limitBeta, rnd);
+			}
+		}
+	}
+
+	void initAlpha(string jointName1, string jointName2, int d){
+		auto rnd = Random(unpredictableSeed);
+		if(jointName1!=jointName2){
+			alpha[jointName1][jointName2][d] = uniform(-1.0f * limitAlpha, limitAlpha, rnd);
+		}
+	}
+
+	void initBeta(string jointName1, string jointName2, int d){
+		auto rnd = Random(unpredictableSeed);
+		if(jointName1!=jointName2){
+			beta[jointName1][jointName2][d] = uniform(-1.0f * limitBeta, limitBeta, rnd);
+		}
+	}
+
+}
+
+
 
 //遺伝させるパラメータ
 struct serialOrderGene{

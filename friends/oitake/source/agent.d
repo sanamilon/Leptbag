@@ -23,7 +23,7 @@ const float bodyMass = 10.0f; //動物の総体重．blender側では各パー�
 class agent{
 
 	static agentBodyParameter bodyInformation;
-	static Vector3f scoreCoeff = Vector3f(-0.3f, 0.0f, -1.0f);
+	static Vector3f scoreCoeff = Vector3f(-1.0f, 0.0f, -1.0f);
 	Vector3f initialPos;
 	const initialGravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
 	const initialEyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
@@ -32,6 +32,7 @@ class agent{
 	elementNode[string] parts;
 	generic6DofConstraint[string] g6dofs;
 	serialOrderGene SOG;
+	phaseOscillatorGene[] POG;
 	int sequenceOfOrder; //SOG.tracksのsequenceOfOrder番目の命令を動作に用いる
 	int biologicalClock; //現在のsequenceOfOrderになってからどのくらい時間が経ったか
 	Vector3f score; //行動評価
@@ -60,6 +61,23 @@ class agent{
 		foreach(string s, dof; g6dofs){
 			if(agent.bodyInformation.g6dofParams[s].enabled){
 				this.SOG.init(s, agent.bodyInformation.g6dofParams[s].angLimitLower, agent.bodyInformation.g6dofParams[s].angLimitUpper);
+			}
+		}
+
+		POG.length = phaseOscillatorGene.degreeOfFourier;
+
+		foreach(string s1, dof; g6dofs){
+			if(agent.bodyInformation.g6dofParams[s1].enabled){
+				for(uint i=0; i<3; i++){
+					this.POG[i].initOmega(s1);
+					foreach(string s2, dof; g6dofs){
+
+						if(s1!=s2){
+							this.POG[i].initAlphaBeta(s1, s2);
+						}
+
+					}
+				}
 			}
 		}
 
@@ -150,13 +168,14 @@ class agent{
 		}
 
 		void despawn(){
-			foreach(string s, part; parts){
-				part.destroy();
-			}
+
 			foreach(string s, dofs; g6dofs){
 				if(agent.bodyInformation.g6dofParams[s].enabled){
 					dofs.destroy();
 				}
+			}
+			foreach(string s, part; parts){
+				part.destroy();
 			}
 		}
 
@@ -178,6 +197,11 @@ class agent{
 		void copyGene(agent parent){
 			//this.gene = parent.gene;
 			this.SOG.tracks = parent.SOG.tracks;
+			for(uint i=0; i<3; i++){
+				this.POG[i].omega = parent.POG[i].omega;
+				this.POG[i].alpha = parent.POG[i].alpha;
+				this.POG[i].beta = parent.POG[i].beta;
+			}
 		}
 
 
@@ -204,6 +228,7 @@ class agent{
 				this.biologicalClock = 0;
 			}
 			//}
+			this.updateSomatoSensory();
 		}
 
 		//somatosensory:体性感覚
@@ -242,9 +267,9 @@ class agent{
 						);
 			}
 
-			this.updateSomatoSensory();
 
 		}
+
 
 		void moveWithSerialOrder(){
 
@@ -268,9 +293,53 @@ class agent{
 						);
 			}
 
-			this.updateSomatoSensory();
 
 		}
+
+
+		Vector3f interactionItem(string s1){
+
+			Vector3f item = Vector3f(0.0f, 0.0f, 0.0f);
+
+			for(uint i=0; i<3; i++){
+				item[i] += (-1.0) * POG[i].omega[s1] * sin( g6dofs[s1].getAngle(i) );
+			}
+
+			foreach(string s2, dof; g6dofs){
+				if(s1!=s2){
+
+					Vector3f theta = Vector3f(g6dofs[s2].getAngle(0) - g6dofs[s1].getAngle(0),
+							g6dofs[s2].getAngle(1) - g6dofs[s1].getAngle(1),
+							g6dofs[s2].getAngle(2) - g6dofs[s1].getAngle(2)
+							);
+
+					for(uint i=0; i<3; i++){
+						for(uint j=0; j<POG[i].degreeOfFourier; j++){
+							item[i] += POG[i].alpha[s1][s2][j] * cos( (j+1)*theta[i] );
+							item[i] += POG[i].beta[s1][s2][j] * sin( (j+1)*theta[i] );
+						}
+					}
+
+				}
+			}
+
+			return item;
+
+		}
+
+
+		void moveWithPhaseOscillator(){
+
+			if(g6dofs.length==0) return;
+
+			foreach(string s, dof; g6dofs){
+				Vector3f interaction = interactionItem(s);
+				dof.setRotationalTargetVelocity(interaction);
+			}
+
+
+		}
+
 
 		void resetScore(string measuredPart){
 			this.score = -1.0f*this.parts[measuredPart].getPos();

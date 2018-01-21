@@ -13,13 +13,14 @@ import dlib.math.quaternion;
 
 import agent;
 import DEforSOG;
+import DEforPOG;
 import params;
 import loadJson;
 
 
-const int agentNum = 60;
+const int agentNum = 50;
 const int averageOf = 3; //一世代averageOf回の試行を行いその平均をスコアとする
-const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
+const float bodyMass = 30.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
 const string measuredPart = "head"; //この名前のパーツの移動距離を測る
 
@@ -84,7 +85,7 @@ const int trialSpan = 500; //一試行の長さ
 
 
 float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
-float coinForRandomMutation = 0.1f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
+float coinForRandomMutation = 0.1f; //遺伝子要素がランダムに突然変異．
 
 int clock = 0;
 extern (C) void tick(){
@@ -160,11 +161,17 @@ void moveAgents(){
 	//writeln(seq);
 	if(!evaluation){
 		foreach(elem; agents){
-			elem.moveWithSerialOrder();
+			//elem.moveWithSerialOrder();
+			if(elem.biologicalClock == 0){
+				elem.moveWithPhaseOscillator();
+			}
 		}
 	}else{
 		foreach(elem; evaluateds){
-			elem.moveWithSerialOrder();
+			//elem.moveWithSerialOrder();
+			if(elem.biologicalClock == 0){
+				elem.moveWithPhaseOscillator();
+			}
 		}
 	}
 
@@ -315,7 +322,8 @@ void terminateGeneration(){
 		auto rnd = Random(unpredictableSeed);
 		float ditherF = uniform(0.0f, 0.5f, rnd);
 		//突然変異
-		evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
+		//evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
+		evolvePOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 
 		agent.shareGeneAmongGroup(evaluateds, agentNum, averageOf);
 

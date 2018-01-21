@@ -379,9 +379,10 @@ class elementNode{
 		entity.setFriction(coef);
 	}
 	void destroy(){
-		entity.destroy();
-		exported = true;
-		entity = null;
+		if(!exported){
+			entity.destroy();
+			exported = true;
+		}
 	}
 
 	~this(){
@@ -432,9 +433,10 @@ class hingeConstraint{
 		entity.setMotorTarget(angle, duration);
 	}
 	void destroy(){
-		entity.destroy();
-		exported = true;
-		entity = null;
+		if(!exported){
+			entity.destroy();
+			exported = true;
+		}
 	}
 
 	~this(){
@@ -512,7 +514,6 @@ class generic6DofConstraint{
 		if(!exported){
 			entity.destroy();
 			exported = true;
-			entity = null;
 		}
 	}
 
