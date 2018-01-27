@@ -480,10 +480,11 @@ extern (C++) {
 		float getRotationAxisX();
 		float getRotationAxisY();
 		float getRotationAxisZ();
-		float getRotationW();
-		float getRotationX();
-		float getRotationY();
-		float getRotationZ();
+		float getXrot();
+		float getYrot();
+		float getZrot();
+		float getWrot();
+
 
 		float getBasis(int row, int column);
 		float getFriction();
@@ -514,15 +515,10 @@ class elementNode {
 	}
 
 
-
-	Quaternionf getRotation(){
-		float cosAngle = sin(this.entity.getRotationAngle());
-		return Quaternionf(
-				this.entity.getRotationX(),
-				this.entity.getRotationY(),
-				this.entity.getRotationZ(),
-				this.entity.getRotationW());
+	Quaternionf getRot() {
+		return Quaternionf(entity.getXrot(), entity.getYrot(), entity.getZrot(), entity.getWrot());
 	}
+
 
 	float getBasis(int row, int column){
 		return entity.getBasis(row, column);
@@ -551,9 +547,10 @@ class elementNode {
 	}
 
 	void destroy() {
-		entity.destroy();
+		if(!exported){
+			entity.destroy();
+		}
 		exported = true;
-		entity = null;
 	}
 
 	~this() {
@@ -607,13 +604,10 @@ class hingeConstraint {
 	void destroy() {
 		entity.destroy();
 		exported = true;
-		entity = null;
 	}
 
 	~this() {
-		if(exported == false) {
-			entity.destroy();
-		}
+		destroy();
 	}
 }
 
@@ -687,11 +681,12 @@ class generic6DofConstraint{
 	void destroy(){
 		if(!exported){
 			entity.destroy();
-			exported = true;
 		}
+			exported = true;
 	}
 
 	~this(){
+		destroy();
 	}
 
 }

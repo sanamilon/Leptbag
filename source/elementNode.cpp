@@ -65,36 +65,32 @@ float elementNode::getRotationAxisZ() const{
 	return orient.getAxis().getZ();
 }
 
-float elementNode::getRotationW() const{
+float elementNode::getXrot() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-
-	return orient.getW();
+	btQuaternion rot = transform.getRotation();
+	return rot.getX();
 }
 
-float elementNode::getRotationX() const{
+float elementNode::getYrot() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-
-	return orient.getX();
+	btQuaternion rot = transform.getRotation();
+	return rot.getY();
 }
 
-float elementNode::getRotationY() const{
+float elementNode::getZrot() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-
-	return orient.getY();
+	btQuaternion rot = transform.getRotation();
+	return rot.getZ();
 }
 
-float elementNode::getRotationZ() const{
+float elementNode::getWrot() const {
 	btTransform transform;
 	body->getMotionState()->getWorldTransform(transform);
-	btQuaternion orient = transform.getRotation();
-
-	return orient.getZ();
+	btQuaternion rot = transform.getRotation();
+	return rot.getW();
 }
 
 

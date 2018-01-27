@@ -16,10 +16,10 @@ class elementNode_interface{
 	virtual float getRotationAxisX() const = 0;
 	virtual float getRotationAxisY() const = 0;
 	virtual float getRotationAxisZ() const = 0;
-	virtual float getRotationW() const = 0;
-	virtual float getRotationX() const = 0;
-	virtual float getRotationY() const = 0;
-	virtual float getRotationZ() const = 0;
+	virtual float getXrot() const = 0;
+	virtual float getYrot() const = 0;
+	virtual float getZrot() const = 0;
+	virtual float getWrot() const = 0;
 
 	virtual float getBasis(int row, int column) const = 0;
 	virtual float getFriction() const = 0;
@@ -50,10 +50,10 @@ class elementNode : public elementNode_interface{
 	virtual float getRotationAxisX() const;
 	virtual float getRotationAxisY() const;
 	virtual float getRotationAxisZ() const;
-	virtual float getRotationW() const;
-	virtual float getRotationX() const;
-	virtual float getRotationY() const;
-	virtual float getRotationZ() const;
+	virtual float getXrot() const;
+	virtual float getYrot() const;
+	virtual float getZrot() const;
+	virtual float getWrot() const;
 	virtual float getBasis(int row, int column) const;
 	virtual float getFriction() const;
 	virtual void setFriction(float coef);

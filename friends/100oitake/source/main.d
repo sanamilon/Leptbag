@@ -162,16 +162,12 @@ void moveAgents(){
 	if(!evaluation){
 		foreach(elem; agents){
 			//elem.moveWithSerialOrder();
-			if(elem.biologicalClock == 0){
-				elem.moveWithPhaseOscillator();
-			}
+			elem.moveWithPhaseOscillator();
 		}
 	}else{
 		foreach(elem; evaluateds){
 			//elem.moveWithSerialOrder();
-			if(elem.biologicalClock == 0){
-				elem.moveWithPhaseOscillator();
-			}
+			elem.moveWithPhaseOscillator();
 		}
 	}
 

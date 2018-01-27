@@ -73,9 +73,9 @@ struct g6dofParam{
 struct phaseOscillatorGene{
 	static const int degreeOfFourier = 3;
 
-	const float limitOmega = 10.0f;
-	const float limitAlpha = 10.0f;
-	const float limitBeta = 10.0f;
+	const float limitOmega = 1.0f;
+	const float limitAlpha = 1.0f;
+	const float limitBeta = 1.0f;
 
 
 	float[string] omega;
@@ -120,7 +120,7 @@ struct phaseOscillatorGene{
 //遺伝させるパラメータ
 struct serialOrderGene{
 
-	static uint lengthOfSet = 8;
+	static uint lengthOfSet = 6;
 	Vector3f[string][] tracks;
 	bool[][] wavelengthOfOrder;
 	int[] moveSpan;
@@ -136,8 +136,8 @@ struct serialOrderGene{
 		moveSpan.length = lengthOfSet;
 		maxVelocity.length = lengthOfSet;
 
-		friction = 1.0f;//uniform(0.1f, 8.0f, rnd);
-		maxRotationalMotorForce = 10.0f;//uniform(0.0f, 30.0f, rnd);
+		friction = 1.2f;//uniform(0.1f, 8.0f, rnd);
+		maxRotationalMotorForce = 50.0f;//uniform(0.0f, 30.0f, rnd);
 
 		for(int i=0; i<moveSpan.length; i++) moveSpan[i] = uniform(1, 10, rnd);
 
