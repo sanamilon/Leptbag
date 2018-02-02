@@ -73,9 +73,9 @@ struct g6dofParam{
 struct phaseOscillatorGene{
 	static const int degreeOfFourier = 3;
 
-	const float limitOmega = 1.0f;
-	const float limitAlpha = 1.0f;
-	const float limitBeta = 1.0f;
+	const float limitOmega = 20.0f;
+	const float limitAlpha = 20.0f;
+	const float limitBeta = 20.0f;
 
 
 	float[string] omega;

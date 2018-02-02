@@ -29,32 +29,38 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 			for(uint i=0; i<3; i++){
 
 
-					if(Cr > uniform(0.0f, 1.0f, rnd)){
-						child.POG[i].omega[s1] = parents[k].POG[i].omega[s1] + F*( parents[m].POG[i].omega[s1] - parents[l].POG[i].omega[s1] );
-					}else{
+				if(Cr > uniform(0.0f, 1.0f, rnd)){
+					child.POG[i].omega[s1] = parents[k].POG[i].omega[s1] + F*( parents[m].POG[i].omega[s1] - parents[l].POG[i].omega[s1] );
+				}else{
+					if(coin <= uniform(0.0f, 1.0f, rnd)){
 						child.POG[i].initOmega(s1);
 					}
+				}
 
 				foreach(string s2, alp; child.POG[i].alpha){
 
 					if(s1!=s2){
 						for(uint j=0; j<child.POG[i].degreeOfFourier; j++){
 
-								if(Cr > uniform(0.0f, 1.0f, rnd)){
-									child.POG[i].alpha[s1][s2][j] =
-										parents[k].POG[i].alpha[s1][s2][j]
-										+ F*( parents[m].POG[i].alpha[s1][s2][j] - parents[l].POG[i].alpha[s1][s2][j] );
-								}else{
+							if(Cr > uniform(0.0f, 1.0f, rnd)){
+								child.POG[i].alpha[s1][s2][j] =
+									parents[k].POG[i].alpha[s1][s2][j]
+									+ F*( parents[m].POG[i].alpha[s1][s2][j] - parents[l].POG[i].alpha[s1][s2][j] );
+							}else{
+								if(coin <= uniform(0.0f, 1.0f, rnd)){
 									child.POG[i].initAlpha(s1, s2, j);
 								}
+							}
 
-								if(Cr > uniform(0.0f, 1.0f, rnd)){
-									child.POG[i].beta[s1][s2][j] =
-										parents[k].POG[i].beta[s1][s2][j]
-										+ F*( parents[m].POG[i].beta[s1][s2][j] - parents[l].POG[i].beta[s1][s2][j] );
-								}else{
+							if(Cr > uniform(0.0f, 1.0f, rnd)){
+								child.POG[i].beta[s1][s2][j] =
+									parents[k].POG[i].beta[s1][s2][j]
+									+ F*( parents[m].POG[i].beta[s1][s2][j] - parents[l].POG[i].beta[s1][s2][j] );
+							}else{
+								if(coin <= uniform(0.0f, 1.0f, rnd)){
 									child.POG[i].initBeta(s1, s2, j);
 								}
+							}
 
 						}
 					}
@@ -136,7 +142,7 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 
 
 
-
+//
 void simplePOG(agent[] children, agent[] parents, float Cr, float F, int[] bests){
 
 	auto rnd = Random(unpredictableSeed);
