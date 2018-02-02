@@ -304,11 +304,14 @@ void terminateGeneration(){
 
 		}else{ //1世代以降
 
+			auto rnd = Random(unpredictableSeed);
 			//evaluatedsをpop
 			for(int i=0; i<averageOf; i++){
 				for(int j=0; j<agentNum; j++){
-					evaluateds[j + i*agentNum].spawn(
-							Vector3f(to!float(j)*personalSpace + to!float(i)*0.001f, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
+					Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
+					Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
+					spawnPosition = spawnPosition + blur;
+					evaluateds[j + i*agentNum].spawn(spawnPosition, measuredPart);
 				}
 			}
 
@@ -320,6 +323,7 @@ void terminateGeneration(){
 		//突然変異
 		//evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 		evolvePOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
+		//evolvePOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF);
 
 		agent.shareGeneAmongGroup(evaluateds, agentNum, averageOf);
 
@@ -329,12 +333,15 @@ void terminateGeneration(){
 
 		agent.evaluateEvolutionOnProceed(agents, evaluateds, agentNum, averageOf);
 
+		auto rnd = Random(unpredictableSeed);
 		//突然変異体は一旦退場
 		foreach(int i, ref elem; evaluateds) elem.despawn();
 			for(int i=0; i<averageOf; i++){
 				for(int j=0; j<agentNum; j++){
-					agents[j + i*agentNum].spawn(
-							Vector3f(to!float(j)*personalSpace + to!float(i)*0.001f, 0.0f, -10.0f + to!float(i)*personalSpace), measuredPart);
+					Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
+					Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
+					spawnPosition = spawnPosition + blur;
+					agents[j + i*agentNum].spawn(spawnPosition, measuredPart);
 				}
 			}
 

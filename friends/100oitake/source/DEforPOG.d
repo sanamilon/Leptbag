@@ -29,10 +29,10 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 			for(uint i=0; i<3; i++){
 
 
-				if(Cr > uniform(0.0f, 1.0f, rnd)){
+				if(Cr >= uniform(0.0f, 1.0f, rnd)){
 					child.POG[i].omega[s1] = parents[k].POG[i].omega[s1] + F*( parents[m].POG[i].omega[s1] - parents[l].POG[i].omega[s1] );
 				}else{
-					if(coin <= uniform(0.0f, 1.0f, rnd)){
+					if(coin >= uniform(0.0f, 1.0f, rnd)){
 						child.POG[i].initOmega(s1);
 					}
 				}
@@ -42,22 +42,22 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 					if(s1!=s2){
 						for(uint j=0; j<child.POG[i].degreeOfFourier; j++){
 
-							if(Cr > uniform(0.0f, 1.0f, rnd)){
+							if(Cr >= uniform(0.0f, 1.0f, rnd)){
 								child.POG[i].alpha[s1][s2][j] =
 									parents[k].POG[i].alpha[s1][s2][j]
 									+ F*( parents[m].POG[i].alpha[s1][s2][j] - parents[l].POG[i].alpha[s1][s2][j] );
 							}else{
-								if(coin <= uniform(0.0f, 1.0f, rnd)){
+								if(coin >= uniform(0.0f, 1.0f, rnd)){
 									child.POG[i].initAlpha(s1, s2, j);
 								}
 							}
 
-							if(Cr > uniform(0.0f, 1.0f, rnd)){
+							if(Cr >= uniform(0.0f, 1.0f, rnd)){
 								child.POG[i].beta[s1][s2][j] =
 									parents[k].POG[i].beta[s1][s2][j]
 									+ F*( parents[m].POG[i].beta[s1][s2][j] - parents[l].POG[i].beta[s1][s2][j] );
 							}else{
-								if(coin <= uniform(0.0f, 1.0f, rnd)){
+								if(coin >= uniform(0.0f, 1.0f, rnd)){
 									child.POG[i].initBeta(s1, s2, j);
 								}
 							}
@@ -75,13 +75,11 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 
 }
 
+
 //rand
 void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F){
 
 	auto rnd = Random(unpredictableSeed);
-
-
-
 
 	foreach(int h, child; children){
 		foreach(string s1, dof; child.g6dofs){
@@ -91,12 +89,12 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 				int l = uniform(0, agentNum, rnd);
 				int m = uniform(0, agentNum, rnd);
 
-				if(coin <= uniform(0.0f, 1.0f, rnd)){
-					if(Cr > uniform(0.0f, 1.0f, rnd)){
-						child.POG[i].omega[s1] = parents[k].POG[i].omega[s1] + F*( parents[m].POG[i].omega[s1] - parents[l].POG[i].omega[s1] );
-					}else{
+				if(Cr >= uniform(0.0f, 1.0f, rnd)){
+					child.POG[i].omega[s1] = parents[k].POG[i].omega[s1] + F*( parents[m].POG[i].omega[s1] - parents[l].POG[i].omega[s1] );
+				}else{
+					/+
 						child.POG[i].omega[s1] = parents[h].POG[i].omega[s1];
-					}
+					+/
 				}
 
 				foreach(string s2, alp; child.POG[i].alpha){
@@ -104,24 +102,24 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 					if(s1!=s2){
 						for(uint j=0; j<child.POG[i].degreeOfFourier; j++){
 
-							if(coin <= uniform(0.0f, 1.0f, rnd)){
-								if(Cr > uniform(0.0f, 1.0f, rnd)){
-									child.POG[i].alpha[s1][s2][j] =
-										parents[k].POG[i].alpha[s1][s2][j]
-										+ F*( parents[m].POG[i].alpha[s1][s2][j] - parents[l].POG[i].alpha[s1][s2][j] );
-								}else{
+							if(Cr >= uniform(0.0f, 1.0f, rnd)){
+								child.POG[i].alpha[s1][s2][j] =
+									parents[k].POG[i].alpha[s1][s2][j]
+									+ F*( parents[m].POG[i].alpha[s1][s2][j] - parents[l].POG[i].alpha[s1][s2][j] );
+							}else{
+								/+
 									child.POG[i].alpha[s1][s2][j] = parents[h].POG[i].alpha[s1][s2][j];
-								}
+								+/
 							}
 
-							if(coin <= uniform(0.0f, 1.0f, rnd)){
-								if(Cr > uniform(0.0f, 1.0f, rnd)){
-									child.POG[i].beta[s1][s2][j] =
-										parents[k].POG[i].beta[s1][s2][j]
-										+ F*( parents[m].POG[i].beta[s1][s2][j] - parents[l].POG[i].beta[s1][s2][j] );
-								}else{
+							if(Cr >= uniform(0.0f, 1.0f, rnd)){
+								child.POG[i].beta[s1][s2][j] =
+									parents[k].POG[i].beta[s1][s2][j]
+									+ F*( parents[m].POG[i].beta[s1][s2][j] - parents[l].POG[i].beta[s1][s2][j] );
+							}else{
+								/+
 									child.POG[i].beta[s1][s2][j] = parents[h].POG[i].beta[s1][s2][j];
-								}
+								+/
 							}
 
 						}
