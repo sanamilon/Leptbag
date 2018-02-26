@@ -5,7 +5,7 @@ import std.random;
 import std.conv;
 import std.algorithm;
 
-import japariSDK.japarilib;
+import leptbagSDK.leptbaglib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 
@@ -20,11 +20,14 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 	auto rnd = Random(unpredictableSeed);
 
 	int k = bests[0];
-	int l = bests[1];
-	int m = bests[2];
+
 
 
 	foreach(int h, child; children){
+
+		int l = uniform(0, agentNum, rnd);
+		int m = uniform(0, agentNum, rnd);
+
 		foreach(string s1, dof; child.g6dofs){
 			for(uint i=0; i<3; i++){
 

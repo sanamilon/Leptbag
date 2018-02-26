@@ -61,15 +61,10 @@ elementNode* elementManager::generate(parameterPack* raw_input){
 
 
 void elementManager::destroyElement(int id){
-	if(id == elements.back()->getID()){
-		delete elements.at(id);
-		elements[id] = elements.back();
-		elements[id]->changeID(id);
-		elements.pop_back();
-	}else{
-		delete elements.at(id);
-		elements.pop_back();
-	}
+	delete elements.at(id);
+	elements[id] = elements.back();
+	elements[id]->changeID(id);
+	elements.pop_back();
 
 	instanceMatrixArray[id] = instanceMatrixArray.back();
 	instanceMatrixArray.pop_back();

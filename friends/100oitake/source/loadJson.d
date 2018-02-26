@@ -2,7 +2,7 @@ import std.stdio;
 import std.json;
 import std.conv;
 
-import japariSDK.japarilib;
+import leptbagSDK.leptbaglib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 

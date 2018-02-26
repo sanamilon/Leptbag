@@ -5,7 +5,7 @@ import std.random;
 import std.conv;
 import std.algorithm;
 
-import japariSDK.japarilib;
+import leptbagSDK.leptbaglib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 
