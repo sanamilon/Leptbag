@@ -55,8 +55,29 @@ extern (C) void init(){
 	agent.shareGeneAmongGroup(agents, agentNum, averageOf);
 	writeln("shared gene among main groups");
 
+
+
+	evaluateds.length = agentNum*averageOf;
+	agent.prepareAgentsGroup(agentNum, averageOf, personalSpace, measuredPart, evaluateds, info);
+	foreach(int i, ref elem; evaluateds){
+		elem.copyGene(agents[i]);
+	}
+
+	writeln("made \"evaluateds\" groups for evaluation to mutation");
+	writeln("copied gene of main group to group for evaluation");
+
+	//まずagentsが試行を行うのでevaluatedsはpopさせない
+	foreach(int i, ref elem; evaluateds){
+		elem.despawn();
+	}
+
+
 	writeln("start simulation");
 }
+
+
+
+
 
 
 
@@ -64,7 +85,7 @@ extern (C) void init(){
 
 float topScore = -1000.0f; //動物たちは-z方向に歩いていることに注意
 //そのステップ内で行うべき処理を決定するための変数
-int time = 0; //時計
+int time = 0; //時計,ステップ数を計る
 int generation = 0; //世代を記録する
 bool evaluation = false; //trueならDEの突然変異体評価フェイズ
 
@@ -121,6 +142,7 @@ extern (C) void tick(){
 
 		time = 0;
 		terminateTrial();
+		terminateGeneration();
 	}
 
 }
@@ -159,6 +181,7 @@ void moveAgents(){
 	}
 
 }
+
 
 
 //一試行が終わるたびに実行する処理
@@ -213,9 +236,9 @@ void terminateTrial(){
 
 
 
-	terminateGeneration();
 
 }
+
 
 //今世代の結果を表示
 void displayGenerationResult(agent[] group, Vector3f pretopscoretmp){
@@ -252,6 +275,7 @@ void displayGenerationResult(agent[] group, Vector3f pretopscoretmp){
 }
 
 
+
 //世代の終了時処理
 void terminateGeneration(){
 
@@ -276,36 +300,19 @@ void terminateGeneration(){
 		float[] value = agent.culculateValueOnProceed(scores);
 		int[] bests = agent.chooseBest(value);
 
-		if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
-
-			evaluateds.length = agentNum*averageOf;
-
-			agent.prepareAgentsGroup(agentNum, averageOf, personalSpace, measuredPart, evaluateds, info);
-
-			foreach(int i, ref elem; evaluateds){
-				elem.copyGene(agents[i]);
+		auto rnd = Random(unpredictableSeed);
+		//evaluatedsをpop
+		for(int i=0; i<averageOf; i++){
+			for(int j=0; j<agentNum; j++){
+				Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
+				Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
+				spawnPosition = spawnPosition + blur;
+				evaluateds[j + i*agentNum].spawn(spawnPosition, measuredPart);
 			}
-
-			writeln("made groups for evaluation to mutation");
-			writeln("copied gene of main group to group for evaluation");
-
-		}else{ //1世代以降
-
-			auto rnd = Random(unpredictableSeed);
-			//evaluatedsをpop
-			for(int i=0; i<averageOf; i++){
-				for(int j=0; j<agentNum; j++){
-					Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
-					Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
-					spawnPosition = spawnPosition + blur;
-					evaluateds[j + i*agentNum].spawn(spawnPosition, measuredPart);
-				}
-			}
-
 		}
 
+
 		//DEに用いるパラメータ
-		auto rnd = Random(unpredictableSeed);
 		float ditherF = uniform(0.0f, 0.5f, rnd);
 		float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
 		//突然変異
@@ -323,15 +330,17 @@ void terminateGeneration(){
 
 		auto rnd = Random(unpredictableSeed);
 		//突然変異体は一旦退場
-		foreach(int i, ref elem; evaluateds) elem.despawn();
-			for(int i=0; i<averageOf; i++){
-				for(int j=0; j<agentNum; j++){
-					Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
-					Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
-					spawnPosition = spawnPosition + blur;
-					agents[j + i*agentNum].spawn(spawnPosition, measuredPart);
-				}
+		foreach(int i, ref elem; evaluateds){
+			elem.despawn();
+		}
+		for(int i=0; i<averageOf; i++){
+			for(int j=0; j<agentNum; j++){
+				Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
+				Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
+				spawnPosition = spawnPosition + blur;
+				agents[j + i*agentNum].spawn(spawnPosition, measuredPart);
 			}
+		}
 
 		evaluation = false; //次は採用した突然変異体を混ぜて性能評価
 
