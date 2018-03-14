@@ -46,8 +46,8 @@ extern (C) void init(){
 	writeln("loaded data from .json");
 
 	//agents生成
-	agents.length = agentNum*averageOf;
 	agent.registerParameter(info);
+	agents.length = agentNum*averageOf;
 	agent.prepareAgentsGroup(agentNum, averageOf, personalSpace, measuredPart, agents, info);
 	writeln("made main groups of ", averageOf, " (", agentNum, " agents in each group)");
 
@@ -83,24 +83,17 @@ extern (C) void init(){
 
 //毎ステップ実行される--------------------
 
-float topScore = -1000.0f; //動物たちは-z方向に歩いていることに注意
 //そのステップ内で行うべき処理を決定するための変数
 int time = 0; //時計,ステップ数を計る
 int generation = 0; //世代を記録する
-bool evaluation = false; //trueならDEの突然変異体評価フェイズ
+bool evaluation = false; //trueならDEのevaluateds評価フェイズ
 
 const int generationStroke = 0; //一世代毎にgenerationStrokeだけ長い時間の試行を行うようになる
 const int trialSpan = 500; //一試行の長さ
 
-
-float coinForRandomMutation = 0.1f; //遺伝子要素がランダムに突然変異．
-
-int clock = 0;
 extern (C) void tick(){
 
-
 	time++;
-
 	/+
 	if(time%50==0){
 		if(!evaluation){
@@ -118,28 +111,16 @@ extern (C) void tick(){
 	}
 	+/
 
-
-
 	if(time%2==0){
-		//運動する
 		updateAgentsClock();
-		//writeln("clock : ", agents[0].biologicalClock);
-		//writeln("sequence : ", agents[0].sequenceOfOrder);
 	}
-
 	if(time%12==0){
-		if(!evaluation){
-
-		}
-		//運動する
 		moveAgents();
 	}
 
 	//一世代終了
 	if( time == (trialSpan + generation*generationStroke) ){
-
 		writeln();
-
 		time = 0;
 		terminateTrial();
 		terminateGeneration();
@@ -184,15 +165,18 @@ void moveAgents(){
 
 
 
+
+
 //一試行が終わるたびに実行する処理
+float topScore = -1000.0f; //動物たちは-z方向に歩いていることに注意
+
 void terminateTrial(){
 
 	Vector3f preTopScoreTmp = Vector3f(0.0f, 0.0f, 10000.0f);
-	float proScoreTmp = -1000.0f; //この世代の最高移動距離
+
 	float[] averageScore;
 	averageScore.length = averageOf;
 	averageScore[] = 0.0f;
-
 
 	if(!evaluation){ //各個体の移動距離を測るフェイズ
 
@@ -200,8 +184,6 @@ void terminateTrial(){
 
 			agents[i].addCurrentPosition(measuredPart);
 			agents[i].absScore(true, false, false);
-
-			proScoreTmp = max( -1.0*agents[i].score.z, proScoreTmp );
 
 			if(agents[i].score.z < preTopScoreTmp.z){
 				preTopScoreTmp = agents[i].score;
@@ -221,8 +203,6 @@ void terminateTrial(){
 			evaluateds[i].addCurrentPosition(measuredPart);
 			evaluateds[i].absScore(true, false, false);
 
-			proScoreTmp = max( -1.0*evaluateds[i].score.z, proScoreTmp );
-
 			if(evaluateds[i].score.z < preTopScoreTmp.z){
 				preTopScoreTmp = evaluateds[i].score;
 			}
@@ -230,11 +210,7 @@ void terminateTrial(){
 		}
 
 		displayGenerationResult(evaluateds, preTopScoreTmp);
-
-
 	}
-
-
 
 
 }
@@ -244,10 +220,10 @@ void terminateTrial(){
 void displayGenerationResult(agent[] group, Vector3f pretopscoretmp){
 
 	//今回の世代の最高記録
-	writeln("	top proceeding of this generation : ", pretopscoretmp);
+	writeln("	top z proceeding of this generation : ", pretopscoretmp);
 
-	writeln("\taverage scores at each trial");
-	writeln("\t", culculateAverage(agents, agentNum, averageOf) );
+	writeln("\taverage scores at each trial:");
+	writeln("\t", culculateAverage(agents, agentNum, averageOf));
 
 	//最高記録が出たら記録，表示
 	if(-1.0*pretopscoretmp.z>topScore){
@@ -255,57 +231,44 @@ void displayGenerationResult(agent[] group, Vector3f pretopscoretmp){
 		writeln("!	top proceeding ever! : ", topScore);
 	}
 
-
-	for(int i=0; i<0; i++){
-		writeln("agents[", i, "].score.z : ", agents[i].score.z);
-	}
-
 	writeln();
-
-	/+
-	for(int i=0; i<averageOf; i++){
-		write("group", i, "[ ");
-		for(int j=0; j<agentNum; j++){
-			write(agents[j+i*agentNum].score.z, ", ");
-		}
-		writeln("]");
-	}
-	+/
 
 }
 
 
 
 //世代の終了時処理
+float coinForRandomMutation = 0.1f; //遺伝子要素がランダムに突然変異．
+
 void terminateGeneration(){
 
 
 	if(!evaluation){ //評価フェイズ
 		writeln("	start evaluation ", generation, ":");
 	}else{
-		writeln("start generation ", ++generation, ": ---------------------------------");
+		writeln("start generation ", ++generation, ": ---------------------------------\n");
 	}
 
 
 	if(!evaluation){ //各個体の移動距離を測るフェイズ
 
 
-		Vector3f[] scores = agent.sumScoreOnIndividual(agents, agentNum, averageOf);
 
 		//agentsは一旦退場
 		foreach(int i,ref elem; agents){
 			elem.despawn();
 		}
 
+		Vector3f[] scores = agent.sumScoreOnIndividual(agents, agentNum, averageOf);
 		float[] value = agent.culculateValueOnProceed(scores);
-		int[] bests = agent.chooseBest(value);
+		int[] bests = agent.chooseBest3(value);
 
 		auto rnd = Random(unpredictableSeed);
 		//evaluatedsをpop
 		for(int i=0; i<averageOf; i++){
 			for(int j=0; j<agentNum; j++){
 				Vector3f spawnPosition = Vector3f(to!float(j)*personalSpace , 0.0f, -10.0f + to!float(i)*personalSpace);
-				Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
+				Vector3f blur = Vector3f( uniform(-0.1f, 0.1f, rnd), uniform(-0.0f, 0.1f, rnd), uniform(-0.1f, 0.1f, rnd) );
 				spawnPosition = spawnPosition + blur;
 				evaluateds[j + i*agentNum].spawn(spawnPosition, measuredPart);
 			}

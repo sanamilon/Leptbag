@@ -41,6 +41,7 @@ class agent{
 	static void registerParameter(agentBodyParameter info);
 	static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf);
 	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf);
+	static int[] chooseBest3(float[] value);
 	static float[] culculateValueOnProceed(Vector3f scores);
 	static float[] culculateValueOnTurnaround(Vector3f scores);
 	static void resetAllScores(agent[] agents);
@@ -201,7 +202,7 @@ class agent{
 
 	void copyGene(agent parent){
 		//this.gene = parent.gene;
-		this.SOG.tracks = parent.SOG.tracks;
+		//this.SOG.tracks = parent.SOG.tracks;
 		for(uint i=0; i<3; i++){
 			this.POG[i].omega = parent.POG[i].omega;
 			this.POG[i].alpha = parent.POG[i].alpha;
@@ -359,7 +360,6 @@ class agent{
 	}
 
 	void addCurrentPosition(string measuredPart){
-		//writeln(this.score, " : ", this.parts[measuredPart].getPos());
 		this.score += this.parts[measuredPart].getPos();
 	}
 
@@ -405,7 +405,7 @@ static Vector3f[] sumScoreOnIndividual(ref agent[] agents, int agentNum, int ave
 	return scores;
 }
 
-static int[] chooseBest(float[] value){
+static int[] chooseBest3(float[] value){
 	int[] bests;
 	bests.length = 3;
 	bests[] = 0;
@@ -513,7 +513,7 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 	}
 	+/
 
-		float[] scoreZ;
+	float[] scoreZ;
 	scoreZ.length = agentNum;
 	for(int i=0; i<scoreZ.length; i++){
 		scoreZ[i] = agents[i].score.z;//scores[i].z;
