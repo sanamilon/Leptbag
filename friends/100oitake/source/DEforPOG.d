@@ -21,8 +21,6 @@ void evolvePOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 
 	int k = bests[0];
 
-
-
 	foreach(int h, child; children){
 
 		int l = uniform(0, agentNum, rnd);

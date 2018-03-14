@@ -73,9 +73,9 @@ struct g6dofParam{
 struct phaseOscillatorGene{
 	static const int degreeOfFourier = 3;
 
-	const float limitOmega = 20.0f;
-	const float limitAlpha = 20.0f;
-	const float limitBeta = 20.0f;
+	const float limitOmega = 30.0f;
+	const float limitAlpha = 30.0f;
+	const float limitBeta = 30.0f;
 
 
 	float[string] omega;
@@ -137,7 +137,7 @@ struct serialOrderGene{
 		maxVelocity.length = lengthOfSet;
 
 		friction = 1.2f;//uniform(0.1f, 8.0f, rnd);
-		maxRotationalMotorForce = 50.0f;//uniform(0.0f, 30.0f, rnd);
+		maxRotationalMotorForce = 100.0f;//uniform(0.0f, 30.0f, rnd);
 
 		for(int i=0; i<moveSpan.length; i++) moveSpan[i] = uniform(1, 10, rnd);
 

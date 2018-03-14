@@ -44,10 +44,12 @@ class agent{
 	static float[] culculateValueOnProceed(Vector3f scores);
 	static float[] culculateValueOnTurnaround(Vector3f scores);
 	static void resetAllScores(agent[] agents);
+	static void prepareAgentsGroup(agent[] group, agentBodyParameter information);
 	static void shareGeneAmongGroup(agent[] agents, int agentNum, int averageOf);
 	static void evaluateEvolutionOnProceed(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void evaluateEvolutionOnTurnaround(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void sortAgentsOnScore(agent[] agents);
+	static void swapPOG(agent one, agent two);
 	static void swapTracks(agent one, agent two);
 
 	static void swapScores(agent one, agent two);
@@ -64,7 +66,7 @@ class agent{
 			}
 		}
 
-		POG.length = phaseOscillatorGene.degreeOfFourier;
+		POG.length = 3; //x, y, z
 
 		foreach(string s1, dof; g6dofs){
 			if(agent.bodyInformation.g6dofParams[s1].enabled){
@@ -439,6 +441,20 @@ static void resetAllScores(agent[] agents, string measuredPart){
 	}
 }
 
+static void prepareAgentsGroup(int agentNum, int averageOf, float personalSpace, string measuredPart, agent[] group, agentBodyParameter information){
+	//group.length = agentNum*averageOf;
+
+
+	for(int i=0; i<averageOf; i++){
+		for(int j=0; j<agentNum; j++){
+			group[j + i*agentNum]
+				= new agent(to!float(j)*personalSpace, 0.0f, -10.0f + to!float(i)*personalSpace, measuredPart);
+		}
+	}
+
+}
+
+
 
 static void shareGeneAmongGroup(ref agent[] agents, int agentNum, int averageOf){
 
@@ -453,7 +469,6 @@ static void shareGeneAmongGroup(ref agent[] agents, int agentNum, int averageOf)
 
 static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluateds, int agentNum, int averageOf){
 
-	float employmentRate = 0.0f; //突然変異個体採用率
 
 	Vector3f[] scoresMain = sumScoreOnIndividual(agents, agentNum, averageOf);
 	float[] valueMain = culculateValueOnProceed(scoresMain);
@@ -461,12 +476,12 @@ static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluated
 	Vector3f[] scoresEval = sumScoreOnIndividual(evaluateds, agentNum, averageOf);
 	float[] valueEval = culculateValueOnProceed(scoresEval);
 
+	float employmentRate = 0.0f; //突然変異個体採用率
+
 	for(int i=0; i<agentNum; i++){
 
 		//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
-		Random rnd = Random(unpredictableSeed);
-		float coin = uniform(0.0f, 1.0f, rnd);
-		if( (coin < 0.1f)||( valueEval[i] > valueMain[i] ) ){
+		if( valueEval[i] >= valueMain[i] ){
 			employmentRate += 1.0f;
 			agents[i].copyGene(evaluateds[i]);
 			agents[i].score = evaluateds[i].score;
@@ -491,13 +506,11 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 	writeln(agents[agentNum].SOG.tracks);
 	writeln(agents[agentNum*2].score.z);
 	writeln(agents[agentNum*2].SOG.tracks);
-	+/
-		/+
-		for(int i=0; i<agentNum; i++){
-			for(int j=1; j<averageOf; j++){
-				agents[i].score += agents[j*agentNum+i].score;
-			}
+	for(int i=0; i<agentNum; i++){
+		for(int j=1; j<averageOf; j++){
+			agents[i].score += agents[j*agentNum+i].score;
 		}
+	}
 	+/
 
 		float[] scoreZ;
@@ -519,6 +532,7 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 			}
 		}
 
+		swapPOG(agents[i], agents[index]);
 		swapTracks(agents[i], agents[index]);
 		swapScores(agents[i], agents[index]);
 	}
@@ -564,6 +578,29 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 
 }
 
+
+static void swapPOG(agent one, agent two){
+
+	float[string] omega;
+	float[][string][string] alpha;
+	float[][string][string] beta;
+	for(uint i=0; i<3; i++){
+
+		omega = one.POG[i].omega;
+		one.POG[i].omega = two.POG[i].omega;
+		two.POG[i].omega = omega;
+
+		alpha = one.POG[i].alpha;
+		one.POG[i].alpha = two.POG[i].alpha;
+		two.POG[i].alpha = alpha;
+
+		beta = one.POG[i].beta;
+		one.POG[i].beta = two.POG[i].beta;
+		two.POG[i].beta = beta;
+	}
+
+
+}
 
 static void swapTracks(agent one, agent two){
 	Vector3f[string][] tmp;
