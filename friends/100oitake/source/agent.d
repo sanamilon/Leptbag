@@ -47,6 +47,7 @@ class agent{
 	static void resetAllScores(agent[] agents);
 	static void prepareAgentsGroup(agent[] group, agentBodyParameter information);
 	static void shareGeneAmongGroup(agent[] agents, int agentNum, int averageOf);
+	static void shareScoreAmongGroup(agent[] agents, int agentNum, int averageOf);
 	static void evaluateEvolutionOnProceed(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void evaluateEvolutionOnTurnaround(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void sortAgentsOnScore(agent[] agents);
@@ -391,7 +392,7 @@ static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf){
 }
 
 
-static Vector3f[] sumScoreOnIndividual(ref agent[] agents, int agentNum, int averageOf){
+static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf){
 	Vector3f[] scores;
 	scores.length = agentNum;
 
@@ -466,6 +467,16 @@ static void shareGeneAmongGroup(ref agent[] agents, int agentNum, int averageOf)
 
 }
 
+static void shareScoreAmongGroup(ref agent[] agents, int agentNum, int averageOf){
+
+	for(int i=0; i<agentNum; i++){
+		for(int j=1; j<averageOf; j++){
+			agents[agentNum*j+i].score = agents[i].score;
+		}
+	}
+
+}
+
 
 static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluateds, int agentNum, int averageOf){
 
@@ -490,33 +501,22 @@ static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluated
 	}
 	writeln("\temployment rate of the evaluateds : ", employmentRate/to!float(agentNum));
 
+	/*
 	sortAgentsOnScoreZ(agents, agentNum, averageOf);
 	shareGeneAmongGroup(agents, agentNum, averageOf);
+	*/
 
 }
 
 
 static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf){
 
-	/+
-		writeln("buma");
-	writeln(agents[0].score.z);
-	writeln(agents[0].SOG.tracks);
-	writeln(agents[agentNum].score.z);
-	writeln(agents[agentNum].SOG.tracks);
-	writeln(agents[agentNum*2].score.z);
-	writeln(agents[agentNum*2].SOG.tracks);
-	for(int i=0; i<agentNum; i++){
-		for(int j=1; j<averageOf; j++){
-			agents[i].score += agents[j*agentNum+i].score;
-		}
-	}
-	+/
 
 	float[] scoreZ;
 	scoreZ.length = agentNum;
-	for(int i=0; i<scoreZ.length; i++){
-		scoreZ[i] = agents[i].score.z;//scores[i].z;
+	Vector3f[] scoreSum = sumScoreOnIndividual(agents, agentNum, averageOf);
+	for(int i=0; i<scoreSum.length; i++){
+		scoreZ[i] = scoreSum[i].z;//scores[i].z;
 	}
 	sort!("a < b")(scoreZ);
 
@@ -526,55 +526,21 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 
 		int index = -1;
 		for(int j=0; j<agentNum; j++){
-			if(scoreZ[i]==agents[j].score.z){
+			if(scoreZ[i]==scoreSum[j].z){
 				index = j;
 				break;
 			}
 		}
 
 		swapPOG(agents[i], agents[index]);
-		swapTracks(agents[i], agents[index]);
 		swapScores(agents[i], agents[index]);
+		//swapTracks(agents[i], agents[index]);
 	}
 
-	/+
-		for(int i=0; i<agentNum-1; i++){
-			if(agents[i].score.z==agents[i+1].score.z){
-				writeln("bumanyan");
-			}
-		}
+	shareGeneAmongGroup(agents, agentNum, averageOf);
+	shareScoreAmongGroup(agents, agentNum, averageOf);
 
-	for(int i=0; i<agentNum; i++){
-		for(int j=0; j<agentNum; j++){
-			if(i!=j){
-				if(scoreZ[i]==scoreZ[j]){
-					writeln("exist same");
-				}
-			}
-		}
-	}
-	+/
-		/+
-		for(int i=0; i<scoreZ.length; i++){
-			if(scoreZ[i]!=agents[i].score.z){
-				writeln("tsurakibi");
-				assert(0);
-			}
-		}
-
-	+/
-		/+
-		for(int i=0; i<agentNum-1; i++){
-			if(agents[i].score.z>agents[i+1].score.z){
-				writeln(i);
-				writeln(agents[i].score.z, " : ", agents[i+1].score.z);
-				writeln("assert(0)");
-				assert(0);
-			}
-		}
-	+/
-
-		writeln("\tsorted agents on their evaluated score.z");
+	writeln("\tsorted agents on their evaluated score.z");
 
 }
 

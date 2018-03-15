@@ -238,7 +238,7 @@ void displayGenerationResult(agent[] group, Vector3f pretopscoretmp){
 
 
 //世代の終了時処理
-float coinForRandomMutation = 0.1f; //遺伝子要素がランダムに突然変異．
+//float coinForRandomMutation = 0.1f; //遺伝子要素がランダムに突然変異．
 
 void terminateGeneration(){
 
@@ -251,8 +251,6 @@ void terminateGeneration(){
 
 
 	if(!evaluation){ //各個体の移動距離を測るフェイズ
-
-
 
 		//agentsは一旦退場
 		foreach(int i,ref elem; agents){
@@ -277,11 +275,15 @@ void terminateGeneration(){
 
 		//DEに用いるパラメータ
 		float ditherF = uniform(0.0f, 0.5f, rnd);
-		float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
+		float Cr = 0.95f; //Crの確率で親の遺伝子を引き継ぐ
+
+		foreach(int id, evaluated; evaluateds){
+			evaluated.copyGene(agents[id]);
+		}
+
 		//突然変異
-		//evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
-		evolvePOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
-		//evolvePOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF);
+		//evolvePOG("best", agentNum, evaluateds[0..agentNum], agents[0..agentNum], Cr, ditherF, bests);
+		evolvePOG("rand", agentNum, evaluateds[0..agentNum], agents[0..agentNum], Cr, ditherF);
 
 		agent.shareGeneAmongGroup(evaluateds, agentNum, averageOf);
 
@@ -290,6 +292,11 @@ void terminateGeneration(){
 	}else{ //突然変異体を評価する
 
 		agent.evaluateEvolutionOnProceed(agents, evaluateds, agentNum, averageOf);
+
+		sortAgentsOnScoreZ(agents, agentNum, averageOf);
+		//shareGeneAmongGroup(agents, agentNum, averageOf);
+
+
 
 		auto rnd = Random(unpredictableSeed);
 		//突然変異体は一旦退場
