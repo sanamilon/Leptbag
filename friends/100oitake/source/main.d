@@ -296,6 +296,12 @@ void terminateGeneration(){
 		sortAgentsOnScoreZ(agents, agentNum, averageOf);
 		//shareGeneAmongGroup(agents, agentNum, averageOf);
 
+		for(int i=0; i<5; i++){
+			for(int j=0; j<averageOf; j++){
+				write(agents[i+agentNum*j].score.z, ", ");
+			}
+			writeln();
+		}
 
 
 		auto rnd = Random(unpredictableSeed);

@@ -47,7 +47,6 @@ class agent{
 	static void resetAllScores(agent[] agents);
 	static void prepareAgentsGroup(agent[] group, agentBodyParameter information);
 	static void shareGeneAmongGroup(agent[] agents, int agentNum, int averageOf);
-	static void shareScoreAmongGroup(agent[] agents, int agentNum, int averageOf);
 	static void evaluateEvolutionOnProceed(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void evaluateEvolutionOnTurnaround(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
 	static void sortAgentsOnScore(agent[] agents);
@@ -467,15 +466,6 @@ static void shareGeneAmongGroup(ref agent[] agents, int agentNum, int averageOf)
 
 }
 
-static void shareScoreAmongGroup(ref agent[] agents, int agentNum, int averageOf){
-
-	for(int i=0; i<agentNum; i++){
-		for(int j=1; j<averageOf; j++){
-			agents[agentNum*j+i].score = agents[i].score;
-		}
-	}
-
-}
 
 
 static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluateds, int agentNum, int averageOf){
@@ -511,11 +501,10 @@ static void evaluateEvolutionOnProceed(ref agent[] agents, ref agent[] evaluated
 
 static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf){
 
-
 	float[] scoreZ;
 	scoreZ.length = agentNum;
 	Vector3f[] scoreSum = sumScoreOnIndividual(agents, agentNum, averageOf);
-	for(int i=0; i<scoreSum.length; i++){
+	for(int i=0; i<agentNum; i++){
 		scoreZ[i] = scoreSum[i].z;//scores[i].z;
 	}
 	sort!("a < b")(scoreZ);
@@ -525,27 +514,37 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 	for(int i=0; i<agentNum-1; i++){
 
 		int index = -1;
-		for(int j=0; j<agentNum; j++){
+		for(int j=i; j<agentNum; j++){
 			if(scoreZ[i]==scoreSum[j].z){
 				index = j;
 				break;
 			}
 		}
 
-		swapPOG(agents[i], agents[index]);
-		swapScores(agents[i], agents[index]);
-		//swapTracks(agents[i], agents[index]);
+		Vector3f tmp = scoreSum[index];
+		scoreSum[index] = scoreSum[i];
+		scoreSum[i] = tmp;
+
+
+		if(i!=index){
+			for(int k=0; k<averageOf; k++){
+				//writeln("i : ", i, ", index : ", index);
+				swapPOG(agents[i+agentNum*k], agents[index+agentNum*k]);
+				swapScores(agents[i+agentNum*k], agents[index+agentNum*k]);
+
+			}
+		}
 	}
 
+
 	shareGeneAmongGroup(agents, agentNum, averageOf);
-	shareScoreAmongGroup(agents, agentNum, averageOf);
 
 	writeln("\tsorted agents on their evaluated score.z");
 
 }
 
 
-static void swapPOG(agent one, agent two){
+static void swapPOG(ref agent one, ref agent two){
 
 	float[string] omega;
 	float[][string][string] alpha;
@@ -568,7 +567,7 @@ static void swapPOG(agent one, agent two){
 
 }
 
-static void swapTracks(agent one, agent two){
+static void swapTracks(ref agent one, ref agent two){
 	Vector3f[string][] tmp;
 	tmp = one.SOG.tracks;
 	one.SOG.tracks = two.SOG.tracks;
@@ -576,7 +575,7 @@ static void swapTracks(agent one, agent two){
 
 }
 
-static void swapScores(agent one, agent two){
+static void swapScores(ref agent one, ref agent two){
 	Vector3f tmp;
 	tmp = one.score;
 	one.score = two.score;
