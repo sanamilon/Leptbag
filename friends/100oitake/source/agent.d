@@ -528,16 +528,11 @@ static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf)
 
 		if(i!=index){
 			for(int k=0; k<averageOf; k++){
-				//writeln("i : ", i, ", index : ", index);
 				swapPOG(agents[i+agentNum*k], agents[index+agentNum*k]);
 				swapScores(agents[i+agentNum*k], agents[index+agentNum*k]);
-
 			}
 		}
 	}
-
-
-	shareGeneAmongGroup(agents, agentNum, averageOf);
 
 	writeln("\tsorted agents on their evaluated score.z");
 

@@ -1,30 +1,39 @@
-import std.algorithm;
-import std.stdio;
-import std.random;
+import std.json, std.file, std.stdio;
 
 void main(){
+	float[string] nyan;
+	nyan["inu"] = 0.5f;
+	nyan["nago"] = 0.1f;
+	nyan["buma"] = 0.3f;
 
-	Random rnd = Random(unpredictableSeed);
+	auto f = File("test.json", "w");
 
-	int[] neko;
+	f.write("[\n");
+	f.write("\t{\n");
 
-	//prepareCats(neko);
-
-	neko.length = 5;
-	foreach(int i, int elem; neko){
-		writeln(i);
-		writeln(elem);
-		elem = i;
+	int i=0;
+	foreach(string s, n; nyan){
+		f.write("\t\t\"", s, "\":", n);
+		i++;
+		if(i!=nyan.length){
+			f.write(",\n");
+		}
 	}
-	writeln(neko);
+
+	f.write("\n\t}\n");
+	f.write("]\n");
+
+	f.close();
+
+	auto jsonString = read("test.json");
+
+	auto nyanson = parseJSON(jsonString);
+
+	foreach(elem; nyanson.array){
+		writeln(elem["inu"].floating);
+		writeln(elem["nago"].floating);
+		writeln(elem["buma"].floating);
+	}
+
 
 }
-
-void prepareCats(ref int[] cats){
-	cats.length = 5;
-	foreach(int i, elem; cats){
-		writeln(i);
-		elem = i;
-	}
-}
-

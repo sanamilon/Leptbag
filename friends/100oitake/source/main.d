@@ -274,8 +274,8 @@ void terminateGeneration(){
 
 
 		//DEに用いるパラメータ
-		float ditherF = uniform(0.0f, 0.5f, rnd);
-		float Cr = 0.95f; //Crの確率で親の遺伝子を引き継ぐ
+		float ditherF = uniform(0.0f, 1.0f, rnd);
+		float Cr = 0.9f; //Crの割合の遺伝子を引き継ぐ
 
 		foreach(int id, evaluated; evaluateds){
 			evaluated.copyGene(agents[id]);
@@ -295,14 +295,6 @@ void terminateGeneration(){
 
 		sortAgentsOnScoreZ(agents, agentNum, averageOf);
 		//shareGeneAmongGroup(agents, agentNum, averageOf);
-
-		for(int i=0; i<5; i++){
-			for(int j=0; j<averageOf; j++){
-				write(agents[i+agentNum*j].score.z, ", ");
-			}
-			writeln();
-		}
-
 
 		auto rnd = Random(unpredictableSeed);
 		//突然変異体は一旦退場

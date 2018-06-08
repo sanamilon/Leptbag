@@ -1,0 +1,13 @@
+{
+	"name": "cma_test",
+	"authors": [
+		"sanamichoro"
+	],
+	"dependencies": {
+		"dlib": "~>0.11.1"
+	},
+	"description": "test for cma",
+	"copyright": "sanamichoro",
+	"license": "proprietary",
+	"dflags": ["-defaultlib=libphobos2.so"]
+}
